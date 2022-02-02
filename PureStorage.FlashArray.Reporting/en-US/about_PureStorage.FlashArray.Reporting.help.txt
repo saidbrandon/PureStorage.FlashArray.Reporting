@@ -1,0 +1,35 @@
+TOPIC
+    about_PureStorage.FlashArray.Reporting
+
+SHORT DESCRIPTION
+	Reporting Module for the Pure Storage REST API using MS Charts.
+
+LONG DESCRIPTION
+	Reporting Module for the Pure Storage REST API using MS Charts.
+
+	* Easily create charts that can be saved, emailed, or displayed on-screen
+	* Works on both Windows PowerShell (5.1) and PowerShell Core (6+) (Windows Only)
+	* Create reports that contain multiple charts
+	* Query the Pure Storage REST API directly, no additional modules required
+	* Example scripts to help get you started
+
+EXAMPLES
+    Sample scripts can be found in the "Examples" folder off of the module's root path
+    
+KEYWORDS
+	Pure Storage
+	PureStorage
+	Flash Array
+	FlashArray
+	Flash Blade
+	FlashBlade
+	HTML
+	Status
+	Report
+	MSChart
+	Chart
+	Charts
+	REST API
+	
+LINK
+    https://github.com/saidbrandon/PureStorage.FlashArray.Reporting
