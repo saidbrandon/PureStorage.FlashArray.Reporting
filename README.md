@@ -133,7 +133,7 @@ New-PfaVolumeReport -Array "array02.contoso.local" -Credential (Get-Credential) 
 ### New-PfaStatusReport.ps1
 This script is designed to be run daily to gather information and save it as json so it can be used for comparison data on tomorrow's report. You can optionally save the report as HTML and/or email it. Growth data will be auto populated when you cross its respective threshold.
 ```powershell
-New-PfaStatusReport -Array "array02.contoso.local" -Credential (Get-Credential) -IncludeCharts All -SkipVolumesReport -SaveAsHTML
+New-PfaStatusReport -Array "array02.contoso.local" -Credential (Get-Credential) -IncludeCharts All -SaveAsHTML
 ```
 [![New-PfaStatusReport](Images/New-PfaStatusReport.png)](Images/New-PfaStatusReport.png)
 ** HTML colorization is handled via a separate module named [PS2HTMLTable](https://www.powershellgallery.com/packages/PS2HTMLTable) and is accessible from the [PowerShell Gallery](https://www.powershellgallery.com/packages/PS2HTMLTable). It is not required to run this script, but output will not be colored or highlighted.
