@@ -86,7 +86,7 @@ function Invoke-PfaApiRequest {
         } else {
             $ApiUri = $ApiVersion
         }
-        if ($Array.Expires -le (Get-Date -AsUTC)) {
+        if ($Array.Expires -le [DateTime]::UtcNow) {
             Connect-PfaApi -Array $Array -SkipCertificateCheck:$SkipCertificateCheck
         }
 
