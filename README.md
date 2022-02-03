@@ -9,7 +9,10 @@ PowerShell Reporting Module for the Pure Storage REST API using MS Charts.
     * Query the Pure Storage REST API directly, no additional modules required
     * Example scripts to help get you started
 
-## Installation 
+## Prerequisites
+Get-PfaChartData does not currently support Purity OS 5.3.
+
+## Installation
 Automatic (via PowerShell Gallery)
 ```powershell
 Install-Module PureStorage.FlashArray.Reporting
@@ -128,6 +131,21 @@ Lists volumes across a single or multiple arrays, grouped by array, with usage a
 New-PfaVolumeReport -Array "array02.contoso.local" -Credential (Get-Credential) -ShowTotals
 ```
 [![New-PfaVolumeReport](Images/New-PfaVolumeReport.png)](Images/New-PfaVolumeReport.png)
+** HTML colorization is handled via a separate module named [PS2HTMLTable](https://www.powershellgallery.com/packages/PS2HTMLTable) and is accessible from the [PowerShell Gallery](https://www.powershellgallery.com/packages/PS2HTMLTable). It is not required to run this script, but output will not be colored or highlighted.
+
+### Get-PfaDiskUsage.ps1
+Lists Windows volumes by server and their associated volume information. This command uses a CimSession to connect to the Windows operating system and a VMware connection to get disk information to be cross referenced with the array volumes.
+
+```powershell
+$Credential = Get-Credential
+$FlashArray01 = Connect-PfaApi -ArrayName "array01.contoso.local" -Credential $Credential
+$FlashArray02 = Connect-PfaApi -ArrayName "array02.contoso.local" -Credential $Credential
+$VSphereCredential = Get-Credential
+$VSphere = Connect-ViServer -Server "vsphere.contoso.local -Credential $VSphereCredential
+
+Get-PfaDiskUsage -ComputerName "SERVER01","SERVER02" -VIConnection $VSphere -Connection $FlashArray01,$FlashArray02
+```
+[![Get-PfaDiskUsage](Images/Get-PfaDiskUsage.png)](Images/Get-PfaDiskUsage.png)
 ** HTML colorization is handled via a separate module named [PS2HTMLTable](https://www.powershellgallery.com/packages/PS2HTMLTable) and is accessible from the [PowerShell Gallery](https://www.powershellgallery.com/packages/PS2HTMLTable). It is not required to run this script, but output will not be colored or highlighted.
 
 ### New-PfaStatusReport.ps1

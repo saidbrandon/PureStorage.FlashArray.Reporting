@@ -100,6 +100,9 @@ function Get-PfaChartData {
     }
 
     begin {
+        if (-not (($Array.ApiVersion[2].Minor | Select-Object -Last 1) -gt 1)) {
+            throw "Your Purity OS is not currently supported by Get-PfaChartData."
+        }
         New-DynamicParameter -CreateVariables -BoundParameters $PSBoundParameters
         if ($null -eq $Name) {
             $Name = "*"
