@@ -12,7 +12,7 @@
 RootModule = 'PureStorage.FlashArray.Reporting.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.0'
+ModuleVersion = '1.0.1'
 
 # Supported PSEditions
 CompatiblePSEditions = 'Desktop'
@@ -38,6 +38,8 @@ Reporting Module for the Pure Storage REST API using MS Charts
 * Create reports that contain multiple charts
 * Query the Pure Storage REST API directly, no additional modules required
 * Example scripts to help get you started
+
+Get-PfaChartData does not currently support Purity OS 5.3.
 '@
 
 # Minimum version of the PowerShell engine required by this module
