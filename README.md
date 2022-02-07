@@ -10,7 +10,7 @@ PowerShell Reporting Module for the Pure Storage REST API using MS Charts.
     * Example scripts to help get you started
 
 ## Prerequisites
-Get-PfaChartData does not currently support Purity OS 5.3.
+Requires Purity OS 5.3.0 or newer to create charts. Querying the REST API directly has no requirements.
 
 ## Installation
 Automatic (via PowerShell Gallery)

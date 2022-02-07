@@ -13,6 +13,8 @@ LONG DESCRIPTION
 	* Query the Pure Storage REST API directly, no additional modules required
 	* Example scripts to help get you started
 
+	Requires Purity OS 5.3.0 or newer to create charts. Querying the REST API directly has no requirements.
+
 EXAMPLES
     Sample scripts can be found in the "Examples" folder off of the module's root path
     

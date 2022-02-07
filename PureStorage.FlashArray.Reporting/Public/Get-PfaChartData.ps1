@@ -100,9 +100,6 @@ function Get-PfaChartData {
     }
 
     begin {
-        if (-not (($Array.ApiVersion[2].Minor | Select-Object -Last 1) -gt 1)) {
-            throw "Your Purity OS is not currently supported by Get-PfaChartData."
-        }
         New-DynamicParameter -CreateVariables -BoundParameters $PSBoundParameters
         if ($null -eq $Name) {
             $Name = "*"
@@ -151,19 +148,36 @@ function Get-PfaChartData {
         if ($Type -eq 'Dashboard') {
             if ($ChartName -eq 'Capacity') {
                 try {
-                    $RestResponse = Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method GET -Path "/arrays" -SkipCertificateCheck -ErrorAction Stop
-                    [PSCustomObject]@{
-                        Unique          = $RestResponse.Space.Unique
-                        Snapshots       = $RestResponse.Space.Snapshots
-                        Shared          = $RestResponse.Space.Shared
-                        System          = $RestResponse.Space.System
-                        Empty           = $RestResponse.Capacity - $RestResponse.Space.Total_Physical
-                        DataReduction   = $RestResponse.Space.Data_Reduction
-                        Used            = $RestResponse.Space.Total_Physical
-                        Total           = $RestResponse.Capacity
-                        TotalReduction  = $RestResponse.Space.Total_Reduction
-                        ProvisionedSize = $RestResponse.Space.Total_Provisioned
-                        Replication     = $RestResponse.Space.Replication
+                    if (-not (($Array.ApiVersion[2].Minor | Select-Object -Last 1) -gt 1)) {
+                        $RestResponse = Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method GET -Path "/array?space=true" -ApiVersion 1.18 -SkipCertificateCheck -ErrorAction Stop
+                        [PSCustomObject]@{
+                            Unique          = $RestResponse.Volumes
+                            Snapshots       = $RestResponse.Snapshots
+                            Shared          = $RestResponse.Shared_Space
+                            System          = $RestResponse.System
+                            Empty           = $RestResponse.Capacity - $RestResponse.Total
+                            DataReduction   = $RestResponse.Data_Reduction
+                            Used            = $RestResponse.Total
+                            Total           = $RestResponse.Capacity
+                            TotalReduction  = $RestResponse.Total_Reduction
+                            ProvisionedSize = $RestResponse.Provisioned
+                            #Replication     = 
+                        }
+                    } else {
+                        $RestResponse = Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method GET -Path "/arrays" -SkipCertificateCheck -ErrorAction Stop
+                        [PSCustomObject]@{
+                            Unique          = $RestResponse.Space.Unique
+                            Snapshots       = $RestResponse.Space.Snapshots
+                            Shared          = $RestResponse.Space.Shared
+                            System          = $RestResponse.Space.System
+                            Empty           = $RestResponse.Capacity - $RestResponse.Space.Total_Physical
+                            DataReduction   = $RestResponse.Space.Data_Reduction
+                            Used            = $RestResponse.Space.Total_Physical
+                            Total           = $RestResponse.Capacity
+                            TotalReduction  = $RestResponse.Space.Total_Reduction
+                            ProvisionedSize = $RestResponse.Space.Total_Provisioned
+                            Replication     = $RestResponse.Space.Replication
+                        }
                     }
                 } catch {
                     Write-Error $_
@@ -180,10 +194,32 @@ function Get-PfaChartData {
                         ProtectionGroups            =   @(Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method GET -Path "/protection-groups?destroyed=False" -SkipCertificateCheck -ErrorAction Stop).Count + @(Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method GET -Path "/protection-groups?destroyed=True" -SkipCertificateCheck -ErrorAction Stop).Count
                         ProtectionGroupSnapshots    =   @(Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method GET -Path "/protection-group-snapshots?destroyed=False" -SkipCertificateCheck -ErrorAction Stop).Count + @(Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method GET -Path "/protection-group-snapshots?destroyed=True" -SkipCertificateCheck -ErrorAction Stop).Count
                         Pods                        =   @(Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method GET -Path "/pods?destroyed=False" -SkipCertificateCheck -ErrorAction Stop).Count + @(Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method GET -Path "/pods?destroyed=True" -SkipCertificateCheck -ErrorAction Stop).Count
-                        FileSystems                 =   @(Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method GET -Path "/file-systems" -SkipCertificateCheck -ErrorAction Stop).Count
-                        Directories                 =   @(Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method GET -Path "/directories" -SkipCertificateCheck -ErrorAction Stop).Count
-                        DirectorySnapshots          =   @(Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method GET -Path "/directory-snapshots" -SkipCertificateCheck -ErrorAction Stop).Count
-                        Policies                    =   @(Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method GET -Path "/policies" -SkipCertificateCheck -ErrorAction Stop).Count
+                        FileSystems                 =   Invoke-Command -Command {
+                                                            try {
+                                                                @(Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method GET -Path "/file-systems" -SkipCertificateCheck -ErrorAction Stop).Count
+                                                            } catch {
+                                                                $null
+                                                            }
+                                                        }
+                        Directories                 =   Invoke-Command -Command {
+                                                            try {
+                                                                @(Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method GET -Path "/directories" -SkipCertificateCheck -ErrorAction Stop).Count
+                                                            } catch {
+                                                                $null
+                                                            }
+                                                        }
+                        DirectorySnapshots          =   Invoke-Command -Command {
+                                                            try {
+                                                                @(Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method GET -Path "/directory-snapshots" -SkipCertificateCheck -ErrorAction Stop).Count                                                            } catch {
+                                                            }
+                                                        }
+                        Policies                    =   Invoke-Command -Command {
+                                                            try {
+                                                                @(Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method GET -Path "/policies" -SkipCertificateCheck -ErrorAction Stop).Count
+                                                            } catch {
+                                                                $null
+                                                            }
+                                                        }
                     }
                 } catch {
                     Write-Error $_.Exception.Message
@@ -191,23 +227,81 @@ function Get-PfaChartData {
             }
         } elseif ($Type -eq 'Performance') {
             if ($Group -eq 'Array') {
-                $RestResponse = Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method Get -Path "/arrays/performance?resolution=$Resolution&start_time=$StartTime&protocol_group=all" -SkipCertificateCheck -ErrorAction Stop
+                if (-not (($Array.ApiVersion[2].Minor | Select-Object -Last 1) -gt 1)) {
+                    if ($null -eq $Historical) {
+                        $Historical = '24h'
+                    }
+                    $RestResponse = Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method Get -Path "/array?action=monitor&historical=$Historical&mirrored=true" -ApiVersion 1.18 -SkipCertificateCheck -ErrorAction Stop |
+                    Select-Object local_queue_usec_per_op,
+                                  @{Name = "mirrored_write_bytes_per_sec";Expression = {$_.mirrored_input_per_sec}},
+                                  mirrored_writes_per_sec,
+                                  usec_per_mirrored_write_op,
+                                  @{Name = "time";Expression = {([DateTime]$_.Time).ToLocalTime()}},
+                                  @{Name = "read_bytes_per_sec";Expression = {$_.output_per_sec}},
+                                  @{Name = "write_bytes_per_sec";Expression = {$_.input_per_sec}},
+                                  usec_per_read_op,
+                                  usec_per_write_op,
+                                  reads_per_sec,
+                                  writes_per_sec
+                } else {
+                    $RestResponse = Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method Get -Path "/arrays/performance?resolution=$Resolution&start_time=$StartTime&protocol_group=all" -SkipCertificateCheck -ErrorAction Stop
+                }
             } elseif ($Group -eq 'Volume') {
-                $RestResponse = Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method Get -Path "/arrays/performance?resolution=$Resolution&start_time=$StartTime&protocol_group=block" -SkipCertificateCheck -ErrorAction Stop
+                if (-not (($Array.ApiVersion[2].Minor | Select-Object -Last 1) -gt 1)) {
+                    Write-Error "Volume Charts require Purity OS 6.0 or greater" -ErrorAction Stop
+                } else {
+                    $RestResponse = Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method Get -Path "/arrays/performance?resolution=$Resolution&start_time=$StartTime&protocol_group=block" -SkipCertificateCheck -ErrorAction Stop
+                }
             } elseif ($Group -eq 'Volumes') {
                 $RestResponse = Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method Get -Path "/volumes/performance?resolution=$Resolution&start_time=$StartTime&filter=$Filter&names=$Name" -SkipCertificateCheck -ErrorAction Stop
             } elseif ($Group -eq 'Volume Groups') {
                 $RestResponse = Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method Get -Path "/volume-groups/performance?resolution=$Resolution&start_time=$StartTime&filter=$Filter&names=$Name" -SkipCertificateCheck -ErrorAction Stop
             } elseif ($Group -eq 'File System') {
-                $RestResponse = Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method Get -Path "/arrays/performance?resolution=$Resolution&start_time=$StartTime&protocol_group=file" -SkipCertificateCheck -ErrorAction Stop
+                if (-not (($Array.ApiVersion[2].Minor | Select-Object -Last 1) -gt 1)) {
+                    Write-Error "File System Charts require Purity OS 6.0 or greater" -ErrorAction Stop
+                } else {
+                    $RestResponse = Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method Get -Path "/arrays/performance?resolution=$Resolution&start_time=$StartTime&protocol_group=file" -SkipCertificateCheck -ErrorAction Stop
+                }
             } elseif ($Group -eq 'Pods') {
                 $RestResponse = Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method Get -Path "/pods/performance?resolution=$Resolution&start_time=$StartTime&filter=$Filter&names=$Name" -SkipCertificateCheck -ErrorAction Stop
             } elseif ($Group -eq 'Directories') {
-                $RestResponse = Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method Get -Path "/directories/performance?resolution=$Resolution&start_time=$StartTime&protocol_group=all&filter=$Filter&names=$Name" -SkipCertificateCheck -ErrorAction Stop
+                if (-not (($Array.ApiVersion[2].Minor | Select-Object -Last 1) -gt 1)) {
+                    Write-Error "Directory Charts require Purity OS 6.0 or greater" -ErrorAction Stop
+                } else {
+                    $RestResponse = Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method Get -Path "/directories/performance?resolution=$Resolution&start_time=$StartTime&protocol_group=all&filter=$Filter&names=$Name" -SkipCertificateCheck -ErrorAction Stop
+                }
             }
         } elseif ($Type -eq 'Capacity') {
             if ($Group -eq 'Array') {
-                $RestResponse = Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method Get -Path "/arrays/space?resolution=$Resolution&start_time=$StartTime&filter=$Filter" -SkipCertificateCheck -ErrorAction Stop
+                if (-not (($Array.ApiVersion[2].Minor | Select-Object -Last 1) -gt 1)) {
+                    if ($null -eq $Historical) {
+                        $Historical = '24h'
+                    }
+                    $RestResponse = Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method Get -Path "/array?space=true&historical=$Historical" -ApiVersion 1.18 -SkipCertificateCheck -ErrorAction Stop | ForEach-Object {
+                        [PSCustomObject]@{
+                            Time        = ([DateTime]$_.Time).ToLocalTime()
+                            Name        = $_.Hostname
+                            Id          = "[1]"
+                            Space       = [PSCustomObject]@{
+                                            Data_Reduction      = $_.Data_Reduction
+                                            Shared              = $_.Shared_Space
+                                            Snapshots           = $_.Snapshots
+                                            System              = $_.System
+                                            Thin_Provisioning   = $_.Thin_Provisioning
+                                            Total_Physical      = $_.Total
+                                            Total_Provisioned   = $_.Provisioned
+                                            Total_Reduction     = $_.Total_Reduction
+                                            Unique              = $_.Volumes
+                                            #Virtual             = 
+                                            #Replication         = 
+                                        }
+                            Capacity    = $_.Capacity
+                            Parity      = $_.Parity
+                        }
+                    }
+                } else {
+                    $RestResponse = Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method Get -Path "/arrays/space?resolution=$Resolution&start_time=$StartTime&filter=$Filter" -SkipCertificateCheck -ErrorAction Stop
+                }
             } elseif ($Group -eq 'Volumes') {
                 $RestResponse = Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method Get -Path "/volumes/space?resolution=$Resolution&start_time=$StartTime&filter=$Filter&names=$Name" -SkipCertificateCheck -ErrorAction Stop
             } elseif ($Group -eq 'Volume Groups') {
@@ -215,7 +309,11 @@ function Get-PfaChartData {
             } elseif ($Group -eq 'Pods') {
                 $RestResponse = Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method Get -Path "/pods/space?resolution=$Resolution&start_time=$StartTime&filter=$Filter&names=$Name" -SkipCertificateCheck -ErrorAction Stop                
             } elseif ($Group -eq 'Directories') {
-                $RestResponse = Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method Get -Path "/directories/space?resolution=$Resolution&start_time=$StartTime&filter=$Filter&names=$Name" -SkipCertificateCheck -ErrorAction Stop                
+                if (-not (($Array.ApiVersion[2].Minor | Select-Object -Last 1) -gt 1)) {
+                    Write-Error "Directory Charts require Purity OS 6.0 or greater" -ErrorAction Stop
+                } else {
+                    $RestResponse = Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method Get -Path "/directories/space?resolution=$Resolution&start_time=$StartTime&filter=$Filter&names=$Name" -SkipCertificateCheck -ErrorAction Stop                
+                }
             }
         } elseif ($Type -eq 'Replication') {
             if ($Group -eq 'Array') {
@@ -223,13 +321,14 @@ function Get-PfaChartData {
             }
         }
         if ($Type -ne 'Dashboard') {
-            $RestResponse | ForEach-Object {
-                $_.Time = [DateTimeOffset]::FromUnixTimeMilliseconds($_.Time).DateTime
+                $RestResponse | ForEach-Object {
+                    if ($_.Time.GetType() -eq [Int64]) {
+                        $_.Time = [DateTimeOffset]::FromUnixTimeMilliseconds($_.Time).DateTime.ToLocalTime()
+                    }
+                }
+                $RestResponse
             }
-            $RestResponse
         }
-    }
     end {
-
     }
 }

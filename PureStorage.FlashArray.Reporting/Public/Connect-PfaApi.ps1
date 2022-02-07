@@ -56,6 +56,9 @@ function Connect-PfaApi {
             Verbose                 =   $false
             ErrorAction             =   'Stop'
         }
+        if ($PSVersionTable.PSVersion.Major -lt 6) {
+            $DefaultParameters.Add("UseBasicParsing", $true)
+        }
         if ($SkipCertificateCheck) {
             if ($PSVersionTable.PSVersion.Major -ge 6) {
                 $DefaultParameters.Add("SkipCertificateCheck", $true)

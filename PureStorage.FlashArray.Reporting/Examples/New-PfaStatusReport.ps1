@@ -183,7 +183,11 @@ function New-PfaStatusReport {
             }
 
             $ArrayAttributes = Invoke-PfaApiRequest -Array $Connection -Request RestMethod -Method GET -Path "/array" -ApiVersion 1 -SkipCertificateCheck -ErrorAction Stop | Select-Object array_name, version, revision, id
-            $ArrayAttributes | Add-Member -MemberType NoteProperty -Name model -Value (Invoke-PfaApiRequest -Array $Connection -Request RestMethod -Method GET -Path "/controllers" -SkipCertificateCheck -ErrorAction Stop | Select-Object -Unique -Property model).model
+            if (-not (($Connection.ApiVersion[2].Minor | Select-Object -Last 1) -gt 1)) {
+                $ArrayAttributes | Add-Member -MemberType NoteProperty -Name model -Value (Invoke-PfaApiRequest -Array $Connection -Request RestMethod -Method GET -Path "/array?controllers=true" -ApiVersion 1.18 -SkipCertificateCheck -ErrorAction Stop | Select-Object -Unique -Property model).model
+            } else {
+                $ArrayAttributes | Add-Member -MemberType NoteProperty -Name model -Value (Invoke-PfaApiRequest -Array $Connection -Request RestMethod -Method GET -Path "/controllers" -SkipCertificateCheck -ErrorAction Stop | Select-Object -Unique -Property model).model
+            }
 
             $PfaVolumes = Invoke-PfaApiRequest -Array $Connection -Request RestMethod -Method GET -Path "/volumes" -SkipCertificateCheck -ErrorAction Stop -PipelineVariable Volume | Where-Object {$_.Name -ne 'pure-protocol-endpoint'} | ForEach-Object {
                 $VolumeMetrics = Invoke-PfaApiRequest -Array $Connection -Request RestMethod -Method GET -Path "/volumes/space?names=$($_.Name)" -SkipCertificateCheck -ErrorAction Stop

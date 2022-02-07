@@ -97,6 +97,9 @@ function New-PfaProtectionGroupReport {
         foreach ($FlashArray in $Connection) {
             try {
                 $ProtectionGroups = Invoke-PfaApiRequest -Array $FlashArray -Request RestMethod -Method GET -Path "/protection-groups" -SkipCertificateCheck -PipelineVariable ProtectionGroup -ErrorVariable +ErrorMessage -ErrorAction Stop | ForEach-Object {
+                    if ($PSVersionTable.PSVersion -lt "7.2.0") {
+                        $ProtectionGroup = $_
+                    }
                     $Replication = [PSCustomObject]@{
                         Frequency   =   $_.Replication_Schedule.Frequency / 1000
                         Time        =   $_.Replication_Schedule.At
@@ -156,7 +159,13 @@ function New-PfaProtectionGroupReport {
                                                         }
                                                     }
                                     Serial      =   (Invoke-PfaApiRequest -Array $FlashArray -Request RestMethod -Method GET -Path "/volumes?names=$VolumeName" -SkipCertificateCheck -ErrorAction Stop).Serial
-                                    Source      =   (Invoke-PfaApiRequest -Array $FlashArray -Request RestMethod -Method GET -Path "/arrays" -SkipCertificateCheck -ErrorAction Stop).Name
+                                    Source      =   Invoke-Command -Command {
+                                                        if (-not (($FlashArray.ApiVersion[2].Minor | Select-Object -Last 1) -gt 1)) {
+                                                            (Invoke-PfaApiRequest -Array $FlashArray -Request RestMethod -Method GET -Path "/array" -ApiVersion 1.18 -SkipCertificateCheck -ErrorAction Stop).Array_Name
+                                                        } else {
+                                                            (Invoke-PfaApiRequest -Array $FlashArray -Request RestMethod -Method GET -Path "/arrays" -SkipCertificateCheck -ErrorAction Stop).Name
+                                                        }
+                                                    }
                                     Target      =   (Invoke-PfaApiRequest -Array $FlashArray -Request RestMethod -Method GET -Path "/protection-groups/targets?group_names=$($ProtectionGroup.Name)" -SkipCertificateCheck -PipelineVariable Member -ErrorAction Stop).Member.Name -join ", "
                                 }
                             }
@@ -179,10 +188,12 @@ function New-PfaProtectionGroupReport {
                     }
                 }
                 $AllProtectionGroups += $ProtectionGroups
-                if ($ErrorMessage) {
-                    $AllErrors += [PSCustomObject]@{
-                        ArrayName       =   $FlashArray.ArrayName
-                        ErrorMessage    =   $ErrorMessage
+                if ($ErrorMessage -and $ErrorMessage.Message -ne "System error.") {
+                    $AllErrors = $ErrorMessage | ForEach-Object {
+                        [PSCustomObject]@{
+                            ArrayName       =   $FlashArray.ArrayName
+                            ErrorMessage    =   $ErrorMessage
+                        }
                     }
                 }
                 if ($AllProtectionGroups.Count -gt 0) {

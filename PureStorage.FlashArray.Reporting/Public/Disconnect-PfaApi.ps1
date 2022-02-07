@@ -33,7 +33,10 @@ function Disconnect-PfaApi {
     begin {
         $DefaultParameters = @{
             Verbose                 =   $false
-            ErrorAction             =   'Continue'
+            ErrorAction             =   'Stop'
+        }
+        if ($PSVersionTable.PSVersion.Major -lt 6) {
+            $DefaultParameters.Add("UseBasicParsing", $true)
         }
         if ($SkipCertificateCheck) {
             if ($PSVersionTable.PSVersion.Major -ge 6) {
@@ -69,7 +72,7 @@ function Disconnect-PfaApi {
     }
     process {
         try {
-            Invoke-RestMethod "https://$($Array.ArrayName)/api/$(($Array.ApiVersion[1] | Select-Object -Last 1).ToString())/auth/session" -Method DELETE -WebSession $Array.Auth1x @DefaultParameters -ErrorVariable +DisconnectError -ErrorAction Stop | Out-Null
+            Invoke-RestMethod "https://$($Array.ArrayName)/api/$(($Array.ApiVersion[1] | Select-Object -Last 1).ToString())/auth/session" -Method DELETE -WebSession $Array.Auth1x @DefaultParameters -ErrorVariable +DisconnectError | Out-Null
             $Array.Auth1x = $null
             if ($Array.ApiVersion.ContainsKey(1)) {
                 $Array.ApiVersion.Remove(1)
@@ -78,7 +81,7 @@ function Disconnect-PfaApi {
             Write-Error "($($Array.ArrayName)), error: $_"
         }
         try {
-            Invoke-WebRequest "https://$($Array.ArrayName)/api/$(($Array.ApiVersion[2] | Select-Object -Last 1).ToString())/logout" -Method POST -Headers $Array.Auth2x @DefaultParameters -ErrorVariable +DisconnectError -ErrorAction Stop | Out-Null
+            Invoke-WebRequest "https://$($Array.ArrayName)/api/$(($Array.ApiVersion[2] | Select-Object -Last 1).ToString())/logout" -Method POST -Headers $Array.Auth2x @DefaultParameters -ErrorVariable +DisconnectError | Out-Null
             $Array.Auth2x = $null
             if ($Array.ApiVersion.ContainsKey(2)) {
                 $Array.ApiVersion.Remove(2)

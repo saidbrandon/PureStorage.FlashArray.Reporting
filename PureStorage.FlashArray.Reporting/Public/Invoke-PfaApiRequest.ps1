@@ -86,8 +86,15 @@ function Invoke-PfaApiRequest {
         } else {
             $ApiUri = $ApiVersion
         }
-        if ($Array.Expires -le [DateTime]::UtcNow) {
-            Connect-PfaApi -Array $Array -SkipCertificateCheck:$SkipCertificateCheck
+
+        if ($Array.Expires.Kind -eq 'Utc') {
+            if ([DateTime]::UtcNow -ge $Array.Expires) {
+                Connect-PfaApi -Array $Array -SkipCertificateCheck:$SkipCertificateCheck
+            }
+        } else {
+            if ([DateTime]::Now -ge $Array.Expires) {
+                Connect-PfaApi -Array $Array -SkipCertificateCheck:$SkipCertificateCheck
+            }
         }
 
         if (-not $Path.StartsWith('/')) {
@@ -109,6 +116,9 @@ function Invoke-PfaApiRequest {
             $Params = @{
                 Headers = $Array.Auth2x
             }
+        }
+        if ($PSVersionTable.PSVersion.Major -lt 6) {
+            $Params.Add("UseBasicParsing", $true)
         }
         if ($Request -eq 'WebRequest') {
             if ($PSVersionTable.PSVersion.Major -ge 6) {
