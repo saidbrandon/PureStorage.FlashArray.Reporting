@@ -150,14 +150,14 @@ function Get-PfaDiskUsage {
                     $HTML += "<tr><td style=""border: none;text-align: left;"" colspan=""10""><h3>$($_.ComputerName) ($($_.Disks.Count))</h3></td></tr><tr><th colspan=""7"" style=""background: black;border-right: 1px solid #dddddd;border-top: 1px solid black;border-left: 1px solid black;""></th><th colspan=""4"" style=""background: black;color:white;border-right: 1px solid #dddddd;border-top: 1px solid black;"">Pure Storage</th></tr>"
                     $HTMLTable = $_.Disks | Select-Object @{Name = "Drive";Expression = {$_.DeviceId}}, 
                                                           @{Name = "Label";Expression = {$_.VolumeName}}, 
-                                                          @{Name = "Size";Expression = {Format-Bytes -Bytes $_.Size}},
-                                                          @{Name = "Used";Expression = {Format-Bytes -Bytes ($_.Size - $_.FreeSpace)}},
-                                                          @{Name = "Free Space";Expression = {Format-Bytes -Bytes $_.FreeSpace}},
+                                                          @{Name = "Size";Expression = {Format-Byte -Bytes $_.Size}},
+                                                          @{Name = "Used";Expression = {Format-Byte -Bytes ($_.Size - $_.FreeSpace)}},
+                                                          @{Name = "Free Space";Expression = {Format-Byte -Bytes $_.FreeSpace}},
                                                           Shares,
                                                           Utilization,
                                                           @{Name = "Volume Name";Expression = {$_.VVolName}},
-                                                          @{Name = "Volume Usage";Expression = {Format-Bytes -Bytes $_.VVolSize}},
-                                                          @{Name = "Snapshot Usage";Expression = {Format-Bytes -Bytes $_.VVolSnapshotSize}},
+                                                          @{Name = "Volume Usage";Expression = {Format-Byte -Bytes $_.VVolSize}},
+                                                          @{Name = "Snapshot Usage";Expression = {Format-Byte -Bytes $_.VVolSnapshotSize}},
                                                           @{Name = "Volume Reduction";Expression = {if ($null -ne $_.VVolReduction) {"{0:N2}x" -f $_.VVolReduction} else {"1.00x"}}} |
                                                           New-HTMLTable -HTMLDecode -SetAlternating -NestedTable -RemoveColumnGroup -ColumnClassPrefix "col"
                     # Color "Utilization" cell yellow if value is greater than or equal to 60%
@@ -166,8 +166,7 @@ function Get-PfaDiskUsage {
                     $HTMLTable = Add-HTMLTableColor -HTML $HTMLTable -Argument 75 -CSSAttributeValue "background-color:#fa8a1c;" @paramsUtilization
                     # Color "Utilization" cell red if value is greater than or equal to 90%
                     $HTMLTable = Add-HTMLTableColor -HTML $HTMLTable -Argument 90 -CSSAttributeValue "background-color:#e44f12;" @paramsUtilization -ApplyFormat
-                    #HTMLTable += "<tr><td></td><td></td><td>$(Format-Bytes ($_.Disks.Size | Measure-Object -Sum).Sum)</td><td>$(Format-Bytes (($_.Disks.Size | Measure-Object -Sum).Sum - ($_.Disks.FreeSpace | Measure-Object -Sum).Sum))</td><td>$(Format-Bytes ($_.Disks.FreeSpace | Measure-Object -Sum).Sum)</td><td></td><td>$("{0:N2} %" -f ($_.Disks.Utilization | Measure-Object -Average).Average)</td><td></td><td>$(Format-Bytes ($_.Disks.VVolSize | Measure-Object -Sum).Sum)</td><td>$(Format-Bytes ($_.Disks.VVolSnapshotSize | Measure-Object -Sum).Sum)</td><td>$("{0:N2}x" -f ($_.Disks.VVolReduction | Measure-Object -Average).Average)</td></tr>"
-                    $HTMLTable += "<tr><td class=""top-border""></td><td class=""top-border""></td><td class=""top-border bold"">$(Format-Bytes ($_.Disks.Size | Measure-Object -Sum).Sum)</td><td class=""top-border bold"">$(Format-Bytes (($_.Disks.Size | Measure-Object -Sum).Sum - ($_.Disks.FreeSpace | Measure-Object -Sum).Sum))</td><td class=""top-border bold"">$(Format-Bytes ($_.Disks.FreeSpace | Measure-Object -Sum).Sum)</td><td class=""top-border""></td><td class=""top-border bold"">$("{0:N2} %" -f ($_.Disks.Utilization | Measure-Object -Average).Average)</td><td class=""top-border""></td><td class=""top-border bold"">$(Format-Bytes ($_.Disks.VVolSize | Measure-Object -Sum).Sum)</td><td class=""top-border bold"">$(Format-Bytes ($_.Disks.VVolSnapshotSize | Measure-Object -Sum).Sum)</td><td class=""top-border bold"">$("{0:N2}x" -f ($_.Disks.VVolReduction | Measure-Object -Average).Average)</td></tr>"
+                    $HTMLTable += "<tr><td class=""top-border""></td><td class=""top-border""></td><td class=""top-border bold"">$(Format-Byte ($_.Disks.Size | Measure-Object -Sum).Sum)</td><td class=""top-border bold"">$(Format-Byte (($_.Disks.Size | Measure-Object -Sum).Sum - ($_.Disks.FreeSpace | Measure-Object -Sum).Sum))</td><td class=""top-border bold"">$(Format-Byte ($_.Disks.FreeSpace | Measure-Object -Sum).Sum)</td><td class=""top-border""></td><td class=""top-border bold"">$("{0:N2} %" -f ($_.Disks.Utilization | Measure-Object -Average).Average)</td><td class=""top-border""></td><td class=""top-border bold"">$(Format-Byte ($_.Disks.VVolSize | Measure-Object -Sum).Sum)</td><td class=""top-border bold"">$(Format-Byte ($_.Disks.VVolSnapshotSize | Measure-Object -Sum).Sum)</td><td class=""top-border bold"">$("{0:N2}x" -f ($_.Disks.VVolReduction | Measure-Object -Average).Average)</td></tr>"
                     $HTML += $HTMLTable
                 }
                 $HTML += "</table>"
@@ -237,14 +236,14 @@ function Get-PfaDiskUsage {
                     $HTML += "<tr><td style=""border: none;text-align: left;"" colspan=""10""><h3>$($_.ComputerName) ($($_.Disks.Count))</h3></td></tr><tr><th colspan=""7"" style=""background: black;border-right: 1px solid #dddddd;border-top: 1px solid black;border-left: 1px solid black;""></th><th colspan=""4"" style=""background: black;color:white;border-right: 1px solid #dddddd;border-top: 1px solid black;"">Pure Storage</th></tr>"
                     $Xml = [System.Xml.Linq.XDocument]::Parse("$($_.Disks | Select-Object @{Name = "Drive";Expression = {$_.DeviceId}}, 
                                                           @{Name = "Label";Expression = {$_.VolumeName}}, 
-                                                          @{Name = "Size";Expression = {Format-Bytes -Bytes $_.Size}},
-                                                          @{Name = "Used";Expression = {Format-Bytes -Bytes ($_.Size - $_.FreeSpace)}},
-                                                          @{Name = "Free Space";Expression = {Format-Bytes -Bytes $_.FreeSpace}},
+                                                          @{Name = "Size";Expression = {Format-Byte -Bytes $_.Size}},
+                                                          @{Name = "Used";Expression = {Format-Byte -Bytes ($_.Size - $_.FreeSpace)}},
+                                                          @{Name = "Free Space";Expression = {Format-Byte -Bytes $_.FreeSpace}},
                                                           Shares,
                                                           @{Name = "Utilization";Expression = {"{0:N2} %" -f $_.Utilization}},
                                                           @{Name = "Volume Name";Expression = {$_.VVolName}},
-                                                          @{Name = "Volume Usage";Expression = {Format-Bytes -Bytes $_.VVolSize}},
-                                                          @{Name = "Snapshot Usage";Expression = {Format-Bytes -Bytes $_.VVolSnapshotSize}},
+                                                          @{Name = "Volume Usage";Expression = {Format-Byte -Bytes $_.VVolSize}},
+                                                          @{Name = "Snapshot Usage";Expression = {Format-Byte -Bytes $_.VVolSnapshotSize}},
                                                           @{Name = "Volume Reduction";Expression = {if ($null -ne $_.VVolReduction) {"{0:N2}x" -f $_.VVolReduction} else {"1.00x"}}} |
                                                           ConvertTo-Html -Fragment)")
                     $Xml.Element("table").Element("colgroup").Remove()
@@ -258,7 +257,7 @@ function Get-PfaDiskUsage {
                         }
                     }
                     $HTMLTable = [System.Xml.Linq.XDocument]::Parse($Xml).Document.ToString().Replace("<table>", "").Replace("</table>", "")
-                    $HTMLTable += "<tr><td class=""top-border""></td><td class=""top-border""></td><td class=""top-border bold"">$(Format-Bytes ($_.Disks.Size | Measure-Object -Sum).Sum)</td><td class=""top-border bold"">$(Format-Bytes (($_.Disks.Size | Measure-Object -Sum).Sum - ($_.Disks.FreeSpace | Measure-Object -Sum).Sum))</td><td class=""top-border bold"">$(Format-Bytes ($_.Disks.FreeSpace | Measure-Object -Sum).Sum)</td><td class=""top-border""></td><td class=""top-border bold"">$("{0:N2} %" -f ($_.Disks.Utilization | Measure-Object -Average).Average)</td><td class=""top-border""></td><td class=""top-border bold"">$(Format-Bytes ($_.Disks.VVolSize | Measure-Object -Sum).Sum)</td><td class=""top-border bold"">$(Format-Bytes ($_.Disks.VVolSnapshotSize | Measure-Object -Sum).Sum)</td><td class=""top-border bold"">$("{0:N2}x" -f ($_.Disks.VVolReduction | Measure-Object -Average).Average)</td></tr>"
+                    $HTMLTable += "<tr><td class=""top-border""></td><td class=""top-border""></td><td class=""top-border bold"">$(Format-Byte ($_.Disks.Size | Measure-Object -Sum).Sum)</td><td class=""top-border bold"">$(Format-Byte (($_.Disks.Size | Measure-Object -Sum).Sum - ($_.Disks.FreeSpace | Measure-Object -Sum).Sum))</td><td class=""top-border bold"">$(Format-Byte ($_.Disks.FreeSpace | Measure-Object -Sum).Sum)</td><td class=""top-border""></td><td class=""top-border bold"">$("{0:N2} %" -f ($_.Disks.Utilization | Measure-Object -Average).Average)</td><td class=""top-border""></td><td class=""top-border bold"">$(Format-Byte ($_.Disks.VVolSize | Measure-Object -Sum).Sum)</td><td class=""top-border bold"">$(Format-Byte ($_.Disks.VVolSnapshotSize | Measure-Object -Sum).Sum)</td><td class=""top-border bold"">$("{0:N2}x" -f ($_.Disks.VVolReduction | Measure-Object -Average).Average)</td></tr>"
                     $HTML += $HTMLTable
                 }
                 $HTML += "</table>"
@@ -271,7 +270,7 @@ function Get-PfaDiskUsage {
             }
         }
         $ErrorMessage | Sort-Object OriginInfo | ForEach-Object {
-            Write-Host "$($_.OriginInfo) - $($_.Exception.Message)"
+            Write-Error "$($_.OriginInfo) - $($_.Exception.Message)"
         }
     }
 }

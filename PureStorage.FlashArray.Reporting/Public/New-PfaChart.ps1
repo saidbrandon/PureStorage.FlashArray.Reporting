@@ -424,7 +424,19 @@ function New-PfaChart {
             }
             $Chart = New-Object System.Windows.Forms.DataVisualization.Charting.Chart
             $Chart.Name = $Title
-            $Chart.Width = 1175
+            switch ($Property.Count) {
+                9 {
+                    $Chart.Width = 1017
+                } 10 {
+                    $Chart.Width = 1119
+                } 11 {
+                    $Chart.Width = 1243
+                } 12 {
+                    $Chart.Width = 1398
+                } default {
+                    $Chart.Width = 1175
+                }
+            }
             $Chart.Height = 120
             $Chart.BackColor = "White"
             if ($null -eq $Property) {
@@ -483,10 +495,17 @@ function New-PfaChart {
                 }
                 
                 $LegendItem = New-Object System.Windows.Forms.DataVisualization.Charting.LegendItem
-                [void]$LegendItem.Cells.Add([System.Windows.Forms.DataVisualization.Charting.LegendCellType]::Text, "$("{0:N0}" -f $ChartData.$($Heros[$Property[$_]].Name.Replace(' ', '')))", [System.Drawing.ContentAlignment]::MiddleCenter)
-                $LegendItem.Cells[0].Font = [System.Drawing.Font]::new('Proxima Nova', 20, [System.Drawing.FontStyle]::Bold, [System.Drawing.GraphicsUnit]::Pixel)
-                $LegendItem.Cells[0].ForeColor = "#5ab0ee"
-                [void]$Chart.Legends["ChartArea$_"].CustomItems.Add($LegendItem)
+                if ($null -ne $ChartData.$($Heros[$Property[$_]].Name.Replace(' ', ''))) {
+                    [void]$LegendItem.Cells.Add([System.Windows.Forms.DataVisualization.Charting.LegendCellType]::Text, "$("{0:N0}" -f $ChartData.$($Heros[$Property[$_]].Name.Replace(' ', '')))", [System.Drawing.ContentAlignment]::MiddleCenter)
+                    $LegendItem.Cells[0].Font = [System.Drawing.Font]::new('Proxima Nova', 20, [System.Drawing.FontStyle]::Bold, [System.Drawing.GraphicsUnit]::Pixel)
+                    $LegendItem.Cells[0].ForeColor = "#5ab0ee"
+                    [void]$Chart.Legends["ChartArea$_"].CustomItems.Add($LegendItem)
+                } else {
+                    [void]$LegendItem.Cells.Add([System.Windows.Forms.DataVisualization.Charting.LegendCellType]::Text, "*", [System.Drawing.ContentAlignment]::MiddleCenter)
+                    $LegendItem.Cells[0].Font = [System.Drawing.Font]::new('Proxima Nova', 20, [System.Drawing.FontStyle]::Bold, [System.Drawing.GraphicsUnit]::Pixel)
+                    $LegendItem.Cells[0].ForeColor = "#f37430"
+                    [void]$Chart.Legends["ChartArea$_"].CustomItems.Add($LegendItem)
+                }
             }
         } else {
             $Chart = New-Object System.Windows.Forms.DataVisualization.Charting.Chart
@@ -602,10 +621,10 @@ function New-PfaChart {
                 $Chart.Series["QueueTime"].BorderWidth = 2
                 if ($Group -eq "Array" -or $Group -eq "Volume") {
                     $ChartData | ForEach-Object {
-                        $Chart.Series["ReadLatency"].Points.AddXY($_.Time.ToLocalTime(), $_.Usec_Per_Read_Op / 1000) | Out-Null
-                        $Chart.Series["WriteLatency"].Points.AddXY($_.Time.ToLocalTime(), $_.Usec_Per_Write_Op / 1000) | Out-Null
-                        $Chart.Series["MirroredWriteLatency"].Points.AddXY($_.Time.ToLocalTime(), $_.Usec_Per_Mirrored_Write_Op / 1000) | Out-Null
-                        $Chart.Series["QueueTime"].Points.AddXY($_.Time.ToLocalTime(), $_.Local_Queue_Usec_Per_Op / 1000) | Out-Null
+                        $Chart.Series["ReadLatency"].Points.AddXY($_.Time, $_.Usec_Per_Read_Op / 1000) | Out-Null
+                        $Chart.Series["WriteLatency"].Points.AddXY($_.Time, $_.Usec_Per_Write_Op / 1000) | Out-Null
+                        $Chart.Series["MirroredWriteLatency"].Points.AddXY($_.Time, $_.Usec_Per_Mirrored_Write_Op / 1000) | Out-Null
+                        $Chart.Series["QueueTime"].Points.AddXY($_.Time, $_.Local_Queue_Usec_Per_Op / 1000) | Out-Null
                     }
                 }
                 $Chart.Add_Customize({
@@ -627,9 +646,9 @@ function New-PfaChart {
                 $Chart.Series["MirroredWriteIOPS"].BorderWidth = 2
                 if ($Group -eq "Array" -or $Group -eq "Volume") {
                     $ChartData | ForEach-Object {
-                        $Chart.Series["ReadIOPS"].Points.AddXY($_.Time.ToLocalTime(), $_.Reads_Per_Sec) | Out-Null
-                        $Chart.Series["WriteIOPS"].Points.AddXY($_.Time.ToLocalTime(), $_.Writes_Per_Sec) | Out-Null
-                        $Chart.Series["MirroredWriteIOPS"].Points.AddXY($_.Time.ToLocalTime(), $_.Mirrored_Writes_Per_Sec) | Out-Null
+                        $Chart.Series["ReadIOPS"].Points.AddXY($_.Time, $_.Reads_Per_Sec) | Out-Null
+                        $Chart.Series["WriteIOPS"].Points.AddXY($_.Time, $_.Writes_Per_Sec) | Out-Null
+                        $Chart.Series["MirroredWriteIOPS"].Points.AddXY($_.Time, $_.Mirrored_Writes_Per_Sec) | Out-Null
                     }
                 } else {
                 }
@@ -652,17 +671,17 @@ function New-PfaChart {
                 $Chart.Series["MirroredWriteBandwidth"].BorderWidth = 2
                 if ($Group -eq "Array" -or $Group -eq "Volume") {
                     $ChartData | ForEach-Object {
-                        $Chart.Series["ReadBandwidth"].Points.AddXY($_.Time.ToLocalTime(), $_.Read_Bytes_Per_Sec) | Out-Null
-                        $Chart.Series["WriteBandwidth"].Points.AddXY($_.Time.ToLocalTime(), $_.Write_Bytes_Per_Sec) | Out-Null
-                        $Chart.Series["MirroredWriteBandwidth"].Points.AddXY($_.Time.ToLocalTime(), $_.Mirrored_Write_Bytes_Per_Sec) | Out-Null
+                        $Chart.Series["ReadBandwidth"].Points.AddXY($_.Time, $_.Read_Bytes_Per_Sec) | Out-Null
+                        $Chart.Series["WriteBandwidth"].Points.AddXY($_.Time, $_.Write_Bytes_Per_Sec) | Out-Null
+                        $Chart.Series["MirroredWriteBandwidth"].Points.AddXY($_.Time, $_.Mirrored_Write_Bytes_Per_Sec) | Out-Null
                     }
                 } else {
                     $ChartData | Group-Object Time | ForEach-Object {
                         if ($Chart.Series.Name -notcontains $_.Name) {
                             [void]$Chart.Series.Add($_.Name)
                         }
-                        $Chart.Series["ReadBandwidth"].Points.AddXY($_.Group[0].Time.ToLocalTime(), ($_.Group.Output_Per_Sec | Measure-Object -Sum).Sum) | Out-Null
-                        $Chart.Series["WriteBandwidth"].Points.AddXY($_.Group[0].Time.ToLocalTime(), ($_.Group.Input_Per_Sec | Measure-Object -Sum).Sum) | Out-Null
+                        $Chart.Series["ReadBandwidth"].Points.AddXY($_.Time, ($_.Group.Output_Per_Sec | Measure-Object -Sum).Sum) | Out-Null
+                        $Chart.Series["WriteBandwidth"].Points.AddXY($_.Time, ($_.Group.Input_Per_Sec | Measure-Object -Sum).Sum) | Out-Null
                     }
                 }
                 $Chart.Add_Customize({
@@ -679,6 +698,7 @@ function New-PfaChart {
                 4   =   @{Read = "#5C3F37";Write = "#8D6E64"}
             }
             if ($ChartName -eq "Latency") {
+                $ColorIndex = 0
                 $ChartData | Group-Object Name | ForEach-Object {
                     $_.Group | ForEach-Object {
                         if ($Chart.Series.Name -notcontains "$($_.Name)Read" -and $Chart.Series.Name -notcontains "$($_.Name)Write") {
@@ -686,7 +706,7 @@ function New-PfaChart {
                                 [void]$Chart.Series.Add("$($_.Name)Read")
                                 $Chart.Series["$($_.Name)Read"].ChartType = "Spline"
                                 try {
-                                    $Chart.Series["$($_.Name)Read"].Color = $Colors[@($ChartData | Group-Object Name | Select-Object -ExpandProperty Name).IndexOf($_.Name)].Read
+                                    $Chart.Series["$($_.Name)Read"].Color = $Colors[$ColorIndex].Read
                                 } finally {
                                 }
                                 $Chart.Series["$($_.Name)Read"].BorderWidth = 2
@@ -695,22 +715,28 @@ function New-PfaChart {
                                 [void]$Chart.Series.Add("$($_.Name)Write")
                                 $Chart.Series["$($_.Name)Write"].ChartType = "Spline"
                                 try {
-                                    $Chart.Series["$($_.Name)Write"].Color = $Colors[@($ChartData | Group-Object Name | Select-Object -ExpandProperty Name).IndexOf($_.Name)].Write
+                                    $Chart.Series["$($_.Name)Write"].Color = $Colors[$ColorIndex].Write
                                 } finally {
                                 }
                                 $Chart.Series["$($_.Name)Write"].BorderWidth = 2
                             }
                         }
                         if ($Property -contains "Read") {
-                            $Chart.Series["$($_.Name)Read"].Points.AddXY($_.Time.ToLocalTime(), $_.Usec_Per_Read_Op  / 1000) | Out-Null
+                            $Chart.Series["$($_.Name)Read"].Points.AddXY($_.Time, $_.Usec_Per_Read_Op  / 1000) | Out-Null
                         }
                         if ($Property -contains "Write") {
-                            $Chart.Series["$($_.Name)Write"].Points.AddXY($_.Time.ToLocalTime(), $_.Usec_Per_Write_Op / 1000) | Out-Null
+                            $Chart.Series["$($_.Name)Write"].Points.AddXY($_.Time, $_.Usec_Per_Write_Op / 1000) | Out-Null
+                        }
+                        if ($ColorIndex -eq 4) {
+                            $ColorIndex = 0
+                        } else {
+                            $ColorIndex++
                         }
                     }
                 }
             }
             if ($ChartName -eq "IOPS") {
+                $ColorIndex = 0
                 $ChartData | Group-Object Name | ForEach-Object {
                     $_.Group | ForEach-Object {
                         if ($Chart.Series.Name -notcontains "$($_.Name)Read" -and $Chart.Series.Name -notcontains "$($_.Name)Write") {
@@ -718,7 +744,7 @@ function New-PfaChart {
                                 [void]$Chart.Series.Add("$($_.Name)Read")
                                 $Chart.Series["$($_.Name)Read"].ChartType = "Spline"
                                 try {
-                                    $Chart.Series["$($_.Name)Read"].Color = $Colors[@($ChartData | Group-Object Name | Select-Object -ExpandProperty Name).IndexOf($_.Name)].Read
+                                    $Chart.Series["$($_.Name)Read"].Color = $Colors[$ColorIndex].Read
                                 } finally {
                                 }
                                 $Chart.Series["$($_.Name)Read"].BorderWidth = 2
@@ -727,22 +753,28 @@ function New-PfaChart {
                                 [void]$Chart.Series.Add("$($_.Name)Write")
                                 $Chart.Series["$($_.Name)Write"].ChartType = "Spline"
                                 try {
-                                    $Chart.Series["$($_.Name)Write"].Color = $Colors[@($ChartData | Group-Object Name | Select-Object -ExpandProperty Name).IndexOf($_.Name)].Write
+                                    $Chart.Series["$($_.Name)Write"].Color = $Colors[$ColorIndex].Write
                                 } finally {
                                 }
                                 $Chart.Series["$($_.Name)Write"].BorderWidth = 1
                             }
                         }
                         if ($Property -contains "Read") {
-                            $Chart.Series["$($_.Name)Read"].Points.AddXY($_.Time.ToLocalTime(), $_.Reads_Per_Sec) | Out-Null
+                            $Chart.Series["$($_.Name)Read"].Points.AddXY($_.Time, $_.Reads_Per_Sec) | Out-Null
                         }
                         if ($Property -contains "Write") {
-                            $Chart.Series["$($_.Name)Write"].Points.AddXY($_.Time.ToLocalTime(), $_.Writes_Per_Sec) | Out-Null
+                            $Chart.Series["$($_.Name)Write"].Points.AddXY($_.Time, $_.Writes_Per_Sec) | Out-Null
+                        }
+                        if ($ColorIndex -eq 4) {
+                            $ColorIndex = 0
+                        } else {
+                            $ColorIndex++
                         }
                     }
                 }
             }
             if ($ChartName -eq "Bandwidth") {
+                $ColorIndex = 0
                 $ChartData | Group-Object Name | ForEach-Object {
                     $_.Group | ForEach-Object {
                         if ($Chart.Series.Name -notcontains "$($_.Name)Read" -and $Chart.Series.Name -notcontains "$($_.Name)Write") {
@@ -750,7 +782,7 @@ function New-PfaChart {
                                 [void]$Chart.Series.Add("$($_.Name)Read")
                                 $Chart.Series["$($_.Name)Read"].ChartType = "Spline"
                                 try {
-                                    $Chart.Series["$($_.Name)Read"].Color = $Colors[@($ChartData | Group-Object Name | Select-Object -ExpandProperty Name).IndexOf($_.Name)].Read
+                                    $Chart.Series["$($_.Name)Read"].Color = $Colors[$ColorIndex].Read
                                 } finally {
                                 }
                                 $Chart.Series["$($_.Name)Read"].BorderWidth = 2
@@ -759,17 +791,22 @@ function New-PfaChart {
                                 [void]$Chart.Series.Add("$($_.Name)Write")
                                 $Chart.Series["$($_.Name)Write"].ChartType = "Spline"
                                 try {
-                                    $Chart.Series["$($_.Name)Write"].Color = $Colors[@($ChartData | Group-Object Name | Select-Object -ExpandProperty Name).IndexOf($_.Name)].Write
+                                    $Chart.Series["$($_.Name)Write"].Color = $Colors[$ColorIndex].Write
                                 } finally {
                                 }
                                 $Chart.Series["$($_.Name)Write"].BorderWidth = 1
                             }
                         }
                         if ($Property -contains "Read") {
-                            $Chart.Series["$($_.Name)Read"].Points.AddXY($_.Time.ToLocalTime(), $_.Read_Bytes_Per_Sec) | Out-Null
+                            $Chart.Series["$($_.Name)Read"].Points.AddXY($_.Time, $_.Read_Bytes_Per_Sec) | Out-Null
                         }
                         if ($Property -contains "Write") {
-                            $Chart.Series["$($_.Name)Write"].Points.AddXY($_.Time.ToLocalTime(), $_.Write_Bytes_Per_Sec) | Out-Null
+                            $Chart.Series["$($_.Name)Write"].Points.AddXY($_.Time, $_.Write_Bytes_Per_Sec) | Out-Null
+                        }
+                        if ($ColorIndex -eq 4) {
+                            $ColorIndex = 0
+                        } else {
+                            $ColorIndex++
                         }
                     }
                 }
@@ -805,12 +842,14 @@ function New-PfaChart {
                     $Chart.Series["Shared"].BorderColor = "#55C707"
                     $Chart.Series["Shared"].BorderWidth = 2
                     $Chart.Series["Shared"].YAxisType = "Primary"
-                    [void]$Chart.Series.Add("Replication")
-                    $Chart.Series["Replication"].ChartType = "StackedArea"
-                    $Chart.Series["Replication"].Color = "#DDD000"
-                    $Chart.Series["Replication"].BorderColor = "#DDD000"
-                    $Chart.Series["Replication"].BorderWidth = 2
-                    $Chart.Series["Replication"].YAxisType = "Primary"
+                    if ($null -ne $ChartData.Space.Replication) {
+                        [void]$Chart.Series.Add("Replication")
+                        $Chart.Series["Replication"].ChartType = "StackedArea"
+                        $Chart.Series["Replication"].Color = "#DDD000"
+                        $Chart.Series["Replication"].BorderColor = "#DDD000"
+                        $Chart.Series["Replication"].BorderWidth = 2
+                        $Chart.Series["Replication"].YAxisType = "Primary"
+                    }
                     [void]$Chart.Series.Add("System")
                     $Chart.Series["System"].ChartType = "StackedArea"
                     $Chart.Series["System"].Color = "#CACECE"
@@ -839,15 +878,17 @@ function New-PfaChart {
         
                     $ChartData | Group-Object Name -PipelineVariable CurrentItem | Select-Object -First 1 | ForEach-Object {
                         $_.Group | ForEach-Object {
-                            $Chart.Series["Empty"].Points.AddXY($_.Time.ToLocalTime(), ($_.Capacity - $_.Space.Unique - $_.Space.Snapshots - $_.Space.Shared - $_.Space.Replication - $_.Space.System)) | Out-Null
-                            $Chart.Series["System"].Points.AddXY($_.Time.ToLocalTime(), $_.Space.System) | Out-Null
-                            $Chart.Series["Replication"].Points.AddXY($_.Time.ToLocalTime(), $_.Space.Replication) | Out-Null
-                            $Chart.Series["Shared"].Points.AddXY($_.Time.ToLocalTime(), $_.Space.Shared) | Out-Null
-                            $Chart.Series["Snapshots"].Points.AddXY($_.Time.ToLocalTime(), $_.Space.Snapshots) | Out-Null
-                            $Chart.Series["Unique"].Points.AddXY($_.Time.ToLocalTime(), $_.Space.Unique) | Out-Null
-                            $Chart.Series["Usable"].Points.AddXY($_.Time.ToLocalTime(), $_.Capacity) | Out-Null
+                            $Chart.Series["Empty"].Points.AddXY($_.Time, ($_.Capacity - $_.Space.Unique - $_.Space.Snapshots - $_.Space.Shared - $_.Space.Replication - $_.Space.System)) | Out-Null
+                            $Chart.Series["System"].Points.AddXY($_.Time, $_.Space.System) | Out-Null
+                            if ($null -ne $_.Space.Replication) {
+                                $Chart.Series["Replication"].Points.AddXY($_.Time, $_.Space.Replication) | Out-Null
+                            }
+                            $Chart.Series["Shared"].Points.AddXY($_.Time, $_.Space.Shared) | Out-Null
+                            $Chart.Series["Snapshots"].Points.AddXY($_.Time, $_.Space.Snapshots) | Out-Null
+                            $Chart.Series["Unique"].Points.AddXY($_.Time, $_.Space.Unique) | Out-Null
+                            $Chart.Series["Usable"].Points.AddXY($_.Time, $_.Capacity) | Out-Null
                             if (($CurrentItem.Group.IndexOf($_) % 2) -eq 0) {
-                                $Chart.Series["DataReduction"].Points.AddXY($_.Time.ToLocalTime(), $_.Space.Data_Reduction) | Out-Null
+                                $Chart.Series["DataReduction"].Points.AddXY($_.Time, $_.Space.Data_Reduction) | Out-Null
                             }
                         }
                     }
@@ -859,7 +900,7 @@ function New-PfaChart {
                     $Chart.Series["Provisioned"].YAxisType = "Primary"
                     $ChartData | Group-Object Name | Select-Object -First 1 | ForEach-Object {
                         $_.Group | ForEach-Object {
-                            $Chart.Series["Provisioned"].Points.AddXY($_.Time.ToLocalTime(), $_.Space.Total_Provisioned) | Out-Null
+                            $Chart.Series["Provisioned"].Points.AddXY($_.Time, $_.Space.Total_Provisioned) | Out-Null
                         }
                     }
                 }
@@ -889,13 +930,13 @@ function New-PfaChart {
                                 $Chart.Series["$($_.InputObject)Unique"].BorderColor = "#8F6BB2"
                             }
                             if ($_.SideIndicator -eq "<=") {
-                                $Chart.Series["$($_.InputObject)Unique"].Points.AddXY($CurrentTime.ToLocalTime(), [double]::NaN) | Out-Null
-                                $Chart.Series["$($_.InputObject)Snapshots"].Points.AddXY($CurrentTime.ToLocalTime(), [double]::NaN) | Out-Null
+                                $Chart.Series["$($_.InputObject)Unique"].Points.AddXY($CurrentTime, [double]::NaN) | Out-Null
+                                $Chart.Series["$($_.InputObject)Snapshots"].Points.AddXY($CurrentTime, [double]::NaN) | Out-Null
                             } elseif ($_.SideIndicator -eq "==") {
                                 $IO = $_.InputObject
                                 $DataLookup = $CurrentItem.Group | Where-Object {$_.Name -eq $IO} | Select-Object -ExpandProperty Space
-                                $Chart.Series["$($_.InputObject)Unique"].Points.AddXY($CurrentTime.ToLocalTime(), $DataLookup.Unique) | Out-Null
-                                $Chart.Series["$($_.InputObject)Snapshots"].Points.AddXY($CurrentTime.ToLocalTime(), $DataLookup.Snapshots) | Out-Null
+                                $Chart.Series["$($_.InputObject)Unique"].Points.AddXY($CurrentTime, $DataLookup.Unique) | Out-Null
+                                $Chart.Series["$($_.InputObject)Snapshots"].Points.AddXY($CurrentTime, $DataLookup.Snapshots) | Out-Null
                             }
                         }
                     } -End {
@@ -917,11 +958,11 @@ function New-PfaChart {
                                 $Chart.Series["$($_.InputObject)Provisioned"].YAxisType = "Primary"
                             }
                             if ($_.SideIndicator -eq "<=") {
-                                $Chart.Series["$($_.InputObject)Provisioned"].Points.AddXY($CurrentTime.ToLocalTime(), [double]::NaN) | Out-Null
+                                $Chart.Series["$($_.InputObject)Provisioned"].Points.AddXY($CurrentTime, [double]::NaN) | Out-Null
                             } elseif ($_.SideIndicator -eq "==") {
                                 $IO = $_.InputObject
                                 $DataLookup = $CurrentItem.Group | Where-Object {$_.Name -eq $IO} | Select-Object -ExpandProperty Space
-                                $Chart.Series["$($_.InputObject)Provisioned"].Points.AddXY($CurrentTime.ToLocalTime(), $DataLookup.Total_Provisioned) | Out-Null
+                                $Chart.Series["$($_.InputObject)Provisioned"].Points.AddXY($CurrentTime, $DataLookup.Total_Provisioned) | Out-Null
                             }
                         }
                     } -End {
@@ -939,7 +980,7 @@ function New-PfaChart {
                         if ($Chart.Series.Name -notcontains $_.Name) {
                             [void]$Chart.Series.Add($_.Name)
                         }
-                        $Chart.Series[$_.Name].Points.AddXY($_.Time.ToLocalTime(), $_.Bytes_Per_Sec) | Out-Null
+                        $Chart.Series[$_.Name].Points.AddXY($_.Time, $_.Bytes_Per_Sec) | Out-Null
                         $Chart.Series[$_.Name].ChartType = "Spline"
                         $Chart.Series[$_.Name].BorderWidth = 1
                         $Chart.Series[$_.Name].IsVisibleInLegend = $true
@@ -947,7 +988,7 @@ function New-PfaChart {
                     if ($Chart.Series.Name -notcontains "Total") {
                         [void]$Chart.Series.Add("Total")
                     }
-                    $Chart.Series["Total"].Points.AddXY($_.Group[0].Time.ToLocalTime(), ($_.Group.Bytes_Per_Sec | Measure-Object -Sum).Sum) | Out-Null
+                    $Chart.Series["Total"].Points.AddXY($_.Group[0].Time, ($_.Group.Bytes_Per_Sec | Measure-Object -Sum).Sum) | Out-Null
                     $Chart.Series["Total"].ChartType = "Spline"
                     $Chart.Series["Total"].Color = "#0D98E3"
                     $Chart.Series["Total"].BorderWidth = 1
