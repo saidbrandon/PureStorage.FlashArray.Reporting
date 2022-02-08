@@ -116,11 +116,14 @@ New-PfaChart -Type Capacity -Group Volumes -ChartData $SpaceMetrics -ChartName '
 Disconnect-PfaApi -Array $FlashArray
 ```
 ## Example Scripts
-Example scripts are included in the Examples folder off of the main module root folder. It is recommended that they be copied to your typical "scripts" folder so if you make any adjustments they aren't overriden by an update.
+Example scripts are included in the Examples folder off of the main module root folder. It is recommended that they be copied to your typical "scripts" folder so if you make any adjustments they aren't overriden by an update. The below examples show you how to dot source from the module's Examples folder.
 
 ### New-PfaProtectionGroupReport.ps1
 Lists protections groups across a single or multiple arrays, grouped by array, with snapshot and replication settings.
 ```powershell
+# Load the report function via dot sourcing
+. "$((Get-Module PureStorage.FlashArray.Reporting).ModuleBase)\Examples\New-PfaProtectionGroupReport.ps1"
+
 New-PfaProtectionGroupReport -Array "array01.contoso.local","array02.contoso.local" -Credential (Get-Credential)
 ```
 [![New-PfaProtectionGroupReport](Images/New-PfaProtectionGroupReport.png)](Images/New-PfaProtectionGroupReport.png)
@@ -128,6 +131,9 @@ New-PfaProtectionGroupReport -Array "array01.contoso.local","array02.contoso.loc
 ### New-PfaVolumeReport.ps1
 Lists volumes across a single or multiple arrays, grouped by array, with usage and growth rate from the array's performance counters.
 ```powershell
+# Load the report function via dot sourcing
+. "$((Get-Module PureStorage.FlashArray.Reporting).ModuleBase)\Examples\New-PfaVolumeReport.ps1"
+
 New-PfaVolumeReport -Array "array02.contoso.local" -Credential (Get-Credential) -ShowTotals
 ```
 [![New-PfaVolumeReport](Images/New-PfaVolumeReport.png)](Images/New-PfaVolumeReport.png)
@@ -137,20 +143,27 @@ New-PfaVolumeReport -Array "array02.contoso.local" -Credential (Get-Credential) 
 Lists Windows volumes by server and their associated volume information. This command uses a CimSession to connect to the Windows operating system and a VMware connection to get disk information to be cross referenced with the array volumes.
 
 ```powershell
+# Load the report function via dot sourcing
+. "$((Get-Module PureStorage.FlashArray.Reporting).ModuleBase)\Examples\Get-PfaDiskUsage.ps1"
+
 $Credential = Get-Credential
 $FlashArray01 = Connect-PfaApi -ArrayName "array01.contoso.local" -Credential $Credential
 $FlashArray02 = Connect-PfaApi -ArrayName "array02.contoso.local" -Credential $Credential
 $VSphereCredential = Get-Credential
-$VSphere = Connect-ViServer -Server "vsphere.contoso.local -Credential $VSphereCredential
+$VSphere = Connect-ViServer -Server "vsphere.contoso.local" -Credential $VSphereCredential
 
 Get-PfaDiskUsage -ComputerName "SERVER01","SERVER02" -VIConnection $VSphere -Connection $FlashArray01,$FlashArray02
 ```
+
 [![Get-PfaDiskUsage](Images/Get-PfaDiskUsage.png)](Images/Get-PfaDiskUsage.png)
 ** HTML colorization is handled via a separate module named [PS2HTMLTable](https://www.powershellgallery.com/packages/PS2HTMLTable) and is accessible from the [PowerShell Gallery](https://www.powershellgallery.com/packages/PS2HTMLTable). It is not required to run this script, but output will not be colored or highlighted.
 
 ### New-PfaStatusReport.ps1
 This script is designed to be run daily to gather information and save it as json so it can be used for comparison data on tomorrow's report. You can optionally save the report as HTML and/or email it. Growth data will be auto populated when you cross its respective threshold.
 ```powershell
+# Load the report function via dot sourcing
+. "$((Get-Module PureStorage.FlashArray.Reporting).ModuleBase)\Examples\New-PfaStatusReport.ps1"
+
 New-PfaStatusReport -Array "array02.contoso.local" -Credential (Get-Credential) -IncludeCharts All -SaveAsHTML
 ```
 [![New-PfaStatusReport](Images/New-PfaStatusReport.png)](Images/New-PfaStatusReport.png)

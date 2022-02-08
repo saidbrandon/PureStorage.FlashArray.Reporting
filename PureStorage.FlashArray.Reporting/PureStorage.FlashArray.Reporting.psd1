@@ -12,7 +12,7 @@
 RootModule = 'PureStorage.FlashArray.Reporting.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.2'
+ModuleVersion = '1.0.3'
 
 # Supported PSEditions
 CompatiblePSEditions = 'Desktop'
@@ -64,7 +64,7 @@ PowerShellVersion = '5.1'
 # RequiredModules = @()
 
 # Assemblies that must be loaded prior to importing this module
-RequiredAssemblies = @('Microsoft.PowerShell.Commands.Utility', 'System.Windows.Forms.DataVisualization')
+RequiredAssemblies = @('Microsoft.PowerShell.Commands.Utility', 'System.Windows.Forms.DataVisualization', 'System.Xml.Linq')
 
 # Script files (.ps1) that are run in the caller's environment prior to importing this module.
 ScriptsToProcess = @('Classes\PureStorageRestApi.ps1')
