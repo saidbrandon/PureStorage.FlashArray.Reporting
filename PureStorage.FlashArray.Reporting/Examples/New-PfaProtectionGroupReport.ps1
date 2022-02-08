@@ -126,7 +126,7 @@ function New-PfaProtectionGroupReport {
                             Invoke-PfaApiRequest -Array $FlashArray -Request RestMethod -Method GET -Path "/volumes/space?names=$VolumeName" -SkipCertificateCheck -PipelineVariable Member -ErrorAction Stop | ForEach-Object {
                                 $HostConnections = Invoke-PfaApiRequest -Array $FlashArray -Request RestMethod -Method GET -Path "/connections?volume_names=$VolumeName" -SkipCertificateCheck -ErrorAction Stop
                                 [PSCustomObject]@{
-                                    Name        = $Member.Name
+                                    Name        =   $VolumeName
                                     Size        =   $_.Space.Total_Provisioned
                                     Used        =   $_.Space.Unique
                                     LUN         =   if (-not $HostConnections.Host -and -not ($HostConnections.Host_Group)) {
