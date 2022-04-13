@@ -81,7 +81,7 @@ function Get-PfaChartData {
         $DynamicParameters = New-Object System.Management.Automation.RuntimeDefinedParameterDictionary
 
         if ($Type -eq 'Dashboard') {
-            New-DynamicParameter -Name 'ChartName' -Type ([string]) -Position 0 -Mandatory -ValidateSet @('Overview', 'Capacity') -Dictionary $DynamicParameters
+            New-DynamicParameter -Name 'ChartName' -Type ([string]) -Position 0 -Mandatory -ValidateSet @('Health', 'Overview', 'Capacity') -Dictionary $DynamicParameters
         } elseif ($Type -eq 'Performance') {
             New-DynamicParameter -Name 'Group' -ValidateSet @('Array', 'Volume', 'Volumes', 'Volume Groups', 'File System', 'Pods', 'Directories') -Type ([string]) -Position 0 -Dictionary $DynamicParameters
             New-DynamicParameter -Name 'Historical' -ValidateSet @('5m', '1h', '3h', '24h', '7d', '30d', '90d', '1y') -Type ([string]) -Position 0 -Dictionary $DynamicParameters
@@ -221,6 +221,13 @@ function Get-PfaChartData {
                                                             }
                                                         }
                     }
+                } catch {
+                    Write-Error $_.Exception.Message
+                }
+            }
+            if ($ChartName -eq 'Health') {
+                try {
+                    Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method GET -Path "/hardware" -SkipCertificateCheck -ApiVersion 1
                 } catch {
                     Write-Error $_.Exception.Message
                 }

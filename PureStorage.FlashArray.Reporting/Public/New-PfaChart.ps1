@@ -102,8 +102,8 @@ function New-PfaChart {
         [Parameter(Mandatory = $false, Position = 2)]
         [ValidateScript({
             if ($Type -eq "Dashboard") {
-                if ($_ -eq "Capacity" -or $_ -eq "Overview") {
-                    $_ -eq "Capacity" -or $_ -eq "Overview"
+                if ($_ -eq "Health" -or $_ -eq "Capacity" -or $_ -eq "Overview") {
+                    $_ -eq "Health" -or $_ -eq "Capacity" -or $_ -eq "Overview"
                 } else {
                     throw "$_ is not a valid parameter value for the $Type parameter"
                 }
@@ -127,7 +127,7 @@ function New-PfaChart {
                 }
             }
         })]
-        [ValidateSet("Capacity", "Overview", "Latency", "IOPS", "Bandwidth", "Array Capacity", "Host Capacity")]
+        [ValidateSet("Capacity", "Health", "Overview", "Latency", "IOPS", "Bandwidth", "Array Capacity", "Host Capacity")]
         [Alias("Name")]
         [String]$ChartName,
 
@@ -507,6 +507,801 @@ function New-PfaChart {
                     [void]$Chart.Legends["ChartArea$_"].CustomItems.Add($LegendItem)
                 }
             }
+        } elseif ($ChartName -eq "Health") {
+            $Gear = 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAOdAAADnQG83EOqAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAY5JREFUOI2NkzFu20AQRd8siO10gsTWDVRbUToLCOTGdY6xWgE8AwEt9xbp1YQwkHSh7donsOPcwB0h7KQQGa1lGsgABHZ2/p/5M5wV3rEQwiXwo3eX3vufYzgzHKqqmsQYF4Ovqquxc4xxUVXVZPBlIBdF0QALYCciVlW/ZAWSiNyoagdcA+1+v1+VZflSAFhrZymlofq1qr5RmqsAFtbaGdAaAOdcC+xGWnzuv1Pb9ZzjDETEZoDHlNKF9/7ce38OzIGnMayEEC5VdSUiLks4997f5yVjjPOU0u0wE1WNItJICOG04d/e++mIbOq6flbVj/mdGcHJGBlAVd/EDLBU1QCk/u4shHBxCgwhfAI+ZC0EYPkvY13X37Nf9WSM+eqcu8vI34ApgIg06/X6CqDI5HVZwWlK6bau6z997FXfOVbgsJ4ppV/v9T5mxpjPzrnDInVd9wC0fWwnIg3HmcBhlRuOy9b2nOPEq6qaWGtnw4Ztt9utiPhecthsNptBbdd1D2VZvrxKcGr/+5z/Ag9zvQU24yCSAAAAAElFTkSuQmCC'
+            $Thermometer = 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAABIrAAALPwEjxKtrAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAdpJREFUOI2tU79rFFEQ/mZyOVHYC6hNKkklJCAEtNBoJdyhpSCm8EQOLbQ4ZPdx+Jsroqjs7MqBlhYqES1EsLCysEi80kJFBEH/AlFPiHfnfja7+LKkEZxm3nzv++abefAEpUiSZC7LsrMisgBgBwCQ/CwiKyTvOufe+3zxCzNbAnCxjHtBktecc1cKQD3xYQCXCrGI3FDVWVWdBXCzMBSRy3EcHyp0Ffy9WSBZlF/CMLzgOZ83s8ViJVXdD+DFuglIVrzz2gazr23E1TLxX+P/NRCR6fKlmT03s2dl3OdWut1uJQiCZZJHPc5qnudK2E4AINmM43hyMBg0NQiCLoBC/AtA0znXMrN9AKZI1tI03euca5E8kXMgIotBEFxVAKc8l9tRFD00sxaAFQBbRWRblmWrZnbSOfeAZM/jn1YAEx7wM8+18t4kp3Lnbx42OdFoNGYA7Mmx+Xq9/jqKoif9fv8DyR8A3qjqrTAM79VqtXkAdwBsyZstS6/Xq41Go5cAdudNRgCeishjAB9JjkjOqOoRkscLMYB3w+HwgABAkiSbSV4HcAbApvL4pfhN8n61Wj3Xbre/r/t1aZpOZ1l2DMBBALsAbM/f6CvJt6r6ajweP+p0Op8KzR8Ru73c4pmVrAAAAABJRU5ErkJggg=='
+            $Fan = 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAARfAAAEXwHZ2GHSAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAlNJREFUOI1tk89vTFEUxz/nzjCbPvEX0CVBLETCkiKxpqSJsiiZIMLMe12wejubeW+qIZG0NpQo9pJq2GElwvixEcIfQDqbZl7f/Vq4rxnirO4995zv+Z7zPdf4x/I83yXpLDAGjAb3NzNbLstyfnp6ujccb9Vhdna2URRFF2gC7l/gYCVwu9/vt9M0HawDhOSnwAHAS3okacHMegCSdjrnJoFxwJnZ85WVlaNpmg7qAIPBYMbMDgA/gWNJkryoSnY6nQnn3KiZXZA0BzyRdDCKogy4ZKHntyH+UBzH68lZlu0DXoXr3TiOz3S73UPe+yXAm9luB0yFnhcbjca7LMseZFl2FcDMdlRgkj4BtFqtZUmPgRowVZd0OMQsrK6unjOzCWAiz/OvkrYBBTCZJMni+uTN7gEnJB2uA1sA6vV6ryzLTZKqineHqu/pdDpRrVb70Gq1Xjnnet57gK0OEEBRFNZutx8C+yWdkzQzVPGKmc15719mWXZybW2tkl8O+FFJBRDH8eskSeadc9Vgb5jZ6SE2W2u12s5w/e7M7BlA0LmS7pqk+8AGM/scmF0D7hdFMSdpMjB75sqynOfPho1nWTYWHrZXYGVZ9gKz63Ecn2o0GnuB40DpvZ+3oPdN4CLwyzk3LumNpKaZfWm3248qsDzPj0haBDYDs3EcX64D9Pv9dhRF24Ax7/2SpMfOuQUze9/tdkcl7ZI0Kek4YJKWoyhKYOgzpWm6Mazn+bAk/7MSuDUyMpI0m83iL4AhmjuAqbBgo8H9DViSdCdJko/D8b8BIN0oLhVubhgAAAAASUVORK5CYII='
+            $Clear = 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAATSURBVDhPYxgFo2AUjAIwYGAAAAQQAAGnRHxjAAAAAElFTkSuQmCC'
+
+            $Chart = New-Object System.Windows.Forms.DataVisualization.Charting.Chart
+            $Chart.Width = 1175
+            $Chart.Height = 183
+            $Chart.Name = $Title
+            $Chart.BackColor = "White"
+            $Chart.Images.Add([System.Windows.Forms.DataVisualization.Charting.NamedImage]::new("Gear", $(ConvertFrom-Base64($Gear))))
+            $Chart.Images.Add([System.Windows.Forms.DataVisualization.Charting.NamedImage]::new("Thermometer", $(ConvertFrom-Base64($Thermometer))))
+            $Chart.Images.Add([System.Windows.Forms.DataVisualization.Charting.NamedImage]::new("Fan", $(ConvertFrom-Base64($Fan))))
+            $Chart.Images.Add([System.Windows.Forms.DataVisualization.Charting.NamedImage]::new("Clear", $(ConvertFrom-Base64($Clear))))
+
+            #region Legend
+            "Chassis 0","Controller 0","Controller 1" | ForEach-Object -Begin {$Index = 0} -Process {
+                $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                $ChartArea.Name = "Legend$Index"
+                $ChartArea.Position.X = 8.6125
+                $ChartArea.Position.Y = ($Index * 30) + 15
+                $ChartArea.Position.Width = 7.675
+                $ChartArea.Position.Height = 30
+                $ChartArea.BackColor = "White"
+                $Chart.ChartAreas.Add($ChartArea)
+
+                $Legend = New-Object System.Windows.Forms.DataVisualization.Charting.Legend
+                $Legend.TitleFont = [System.Drawing.Font]::new('Proxima Nova', 11, [System.Drawing.FontStyle]::Bold, [System.Drawing.GraphicsUnit]::Pixel)
+                $Legend.TitleSeparatorColor = "#b0b0b0"
+                $Legend.TitleForeColor = "#454545"
+                $Legend.TitleAlignment = "Near"
+                $Legend.Title = $_
+                $Legend.TitleSeparator = "Line"
+                $Legend.Name = "Legend$Index"
+                $Legend.Docking = "Left"
+                $Legend.Alignment = "Near"
+                $Legend.IsDockedInsideChartArea = $true
+                $Chart.Legends.Add($Legend)
+                $Legend.DockedToChartArea = "Legend$Index"
+
+                if ($Index -eq 0) {
+                    $LegendItem = New-Object System.Windows.Forms.DataVisualization.Charting.LegendItem
+                    [void]$LegendItem.Cells.Add([System.Windows.Forms.DataVisualization.Charting.LegendCellType]::Image, "Gear", [System.Drawing.ContentAlignment]::TopLeft)
+                    $LegendItem.Cells[0].ImageSize = "152,152"
+                    [void]$Chart.Legends[$Legend.Name].CustomItems.Add($LegendItem)
+                    $LegendItem = New-Object System.Windows.Forms.DataVisualization.Charting.LegendItem
+                    [void]$LegendItem.Cells.Add([System.Windows.Forms.DataVisualization.Charting.LegendCellType]::Image, "Clear", [System.Drawing.ContentAlignment]::TopLeft)
+                    $LegendItem.Cells[0].ImageSize = "120,120"
+                    [void]$Chart.Legends[$Legend.Name].CustomItems.Add($LegendItem)
+                    $LegendItem = New-Object System.Windows.Forms.DataVisualization.Charting.LegendItem
+                    [void]$LegendItem.Cells.Add([System.Windows.Forms.DataVisualization.Charting.LegendCellType]::Image, "Clear", [System.Drawing.ContentAlignment]::TopLeft)
+                    $LegendItem.Cells[0].ImageSize = "120,120"
+                    $LegendItem.Cells[0].Margins.Right = 70
+                    [void]$Chart.Legends[$Legend.Name].CustomItems.Add($LegendItem)
+                } else {
+                    $LegendItem = New-Object System.Windows.Forms.DataVisualization.Charting.LegendItem
+                    [void]$LegendItem.Cells.Add([System.Windows.Forms.DataVisualization.Charting.LegendCellType]::Image, "Gear", [System.Drawing.ContentAlignment]::TopLeft)
+                    $LegendItem.Cells[0].ImageSize = "152,152"
+                    [void]$Chart.Legends[$Legend.Name].CustomItems.Add($LegendItem)
+                    $LegendItem = New-Object System.Windows.Forms.DataVisualization.Charting.LegendItem
+                    [void]$LegendItem.Cells.Add([System.Windows.Forms.DataVisualization.Charting.LegendCellType]::Image, "Thermometer", [System.Drawing.ContentAlignment]::TopLeft)
+                    $LegendItem.Cells[0].ImageSize = "120,120"
+                    [void]$Chart.Legends[$Legend.Name].CustomItems.Add($LegendItem)
+                    $LegendItem = New-Object System.Windows.Forms.DataVisualization.Charting.LegendItem
+                    [void]$LegendItem.Cells.Add([System.Windows.Forms.DataVisualization.Charting.LegendCellType]::Image, "Fan", [System.Drawing.ContentAlignment]::TopLeft)
+                    $LegendItem.Cells[0].ImageSize = "152,152"
+                    $LegendItem.Cells[0].Margins.Right = 40
+                    [void]$Chart.Legends[$Legend.Name].CustomItems.Add($LegendItem)
+                }
+                $Index += 1
+            }
+            #endregion Legend
+
+            #region Front Panel
+            $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+            $ChartArea.Position.X = 16.5
+            $ChartArea.Position.Y = 0
+            $ChartArea.Position.Width = 36.375
+            $ChartArea.Position.Height = 10 
+            $ChartArea.Name = "Front"
+            $Chart.ChartAreas.Add($ChartArea)
+
+            $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+            $ChartArea.Position.X = 16.5
+            $ChartArea.Position.Y = 10
+            $ChartArea.Position.Width = 36.375
+            $ChartArea.Position.Height = 90
+            $ChartArea.BackColor = "Black"
+            $Chart.ChartAreas.Add($ChartArea)
+
+            $ChartTitle = [System.Windows.Forms.DataVisualization.Charting.Title]::New()
+            $ChartTitle.Font = [System.Drawing.Font]::new('Proxima Nova', 12, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Pixel)
+            $ChartTitle.Text = 'Front'
+            $ChartTitle.ForeColor = "#8d8d8d"
+            $ChartTitle.DockedToChartArea = "Front"
+            $ChartTitle.Alignment = "MiddleLeft"
+            $Chart.Titles.Add($ChartTitle)
+
+            $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+            $ChartArea.Position.X = 17.25
+            $ChartArea.Position.Y = 14.5
+            $ChartArea.Position.Width = .875
+            $ChartArea.Position.Height = 81
+            $ChartArea.BackColor = "#8dc63f"
+            $Chart.ChartAreas.Add($ChartArea)
+
+            0..3 | ForEach-Object {
+                $Current = $_
+                $NVRAMModule = ($ChartData | Where-Object {$_.Name -eq "CH0.NVB" + $Current})
+                if ($NVRAMModule) {
+                    $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                    $ChartArea.Position.X = ($_ * 7.5) + 18.875
+                    $ChartArea.Position.Y = 14.25
+                    $ChartArea.Position.Width = 7
+                    $ChartArea.Position.Height = 24.25
+                    $ChartArea.BackColor = "#707070"
+                    $Chart.ChartAreas.Add($ChartArea)
+
+                    $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                    $ChartArea.Position.X = ($_ * 7.5) + 24.5
+                    $ChartArea.Position.Y = 16.5
+                    $ChartArea.Position.Width = 1.0625
+                    $ChartArea.Position.Height = 6.5
+                    if ($NVRAMModule.Status -eq "ok") {
+                        $ChartArea.BackColor = "#8dc63f"
+                    } else {
+                        $ChartArea.BackColor = "#fb5000"
+                    }
+                    $Chart.ChartAreas.Add($ChartArea)
+                }
+                if ($_ -eq 0) {
+                    0..3 | ForEach-Object {
+                        $Bay = $_
+                        $FlashModule = ($ChartData | Where-Object {$_.Name -eq "CH0.BAY$Bay"})
+                        $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                        $ChartArea.Name = "Bay $Bay"
+                        switch ($Bay) {
+                            0 {$ChartArea.Position.X = 18.875}
+                            1 {$ChartArea.Position.X = 20.25}
+                            2 {$ChartArea.Position.X = 21.6125}
+                            3 {$ChartArea.Position.X = 22.975}
+                        }
+                        $ChartArea.Position.Y = 45
+                        $ChartArea.Position.Width = 1.25
+                        $ChartArea.Position.Height = 50.5
+                        $ChartArea.BackColor = "#707070"
+                        $Chart.ChartAreas.Add($ChartArea)
+                    
+                        if ($FlashModule.Status -eq "not_installed") {
+                            $Chart.ChartAreas["Bay $_"].BackColor = "#363636"
+                        } else {
+                            $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                            $ChartArea.Position.X = $Chart.ChartAreas["Bay $Bay"].Position.X + (.01625 * 5)
+                            $ChartArea.Position.Y = 45.5
+                            $ChartArea.Position.Width = 1.0625
+                            $ChartArea.Position.Height = 6.75
+                            if ($FlashModule.Status -eq "ok") {
+                                $ChartArea.BackColor = "#8dc63f"
+                            } else {
+                                $ChartArea.BackColor = "#fb5000"
+                            }
+                            $Chart.ChartAreas.Add($ChartArea)
+                        }
+                    }
+                } elseif ($_ -gt 0 -and $_ -lt 3) {
+                    0..3 | ForEach-Object {
+                        $Bay = $_
+                        $FlashModule = ($ChartData | Where-Object {$_.Name -eq "CH0.BAY$($Current * 4 + $Bay)"})
+                        $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                        $ChartArea.Name = "Bay $($Current * 4 + $_)"
+                        if ($Current -eq 1) {
+                            $ChartArea.Position.X = $Chart.ChartAreas["Bay $(($Current - 1) * 4 + $_)"].Position.X + 7.5
+                        } else {
+                            $ChartArea.Position.X = $Chart.ChartAreas["Bay $(($Current - 1) * 4 + $_)"].Position.X + 7.48375
+                        }
+                        $ChartArea.Position.Y = 45
+                        $ChartArea.Position.Width = 1.25
+                        $ChartArea.Position.Height = 50.5
+                        $ChartArea.BackColor = "#707070"
+                        $Chart.ChartAreas.Add($ChartArea)
+
+                        if ($FlashModule.Status -eq "not_installed") {
+                            $Chart.ChartAreas["Bay $($Current * 4 + $_)"].BackColor = "#363636"
+                        } else {
+                            $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                            if ($_ -lt 4) {
+                                $ChartArea.Position.X = $Chart.ChartAreas["Bay $(($Current - 1) * 4 + $_)"].Position.X + 7.58125
+                            } else {
+                                $ChartArea.Position.X = $Chart.ChartAreas["Bay $($Current * 4 + $_ - 4)"].Position.X + 5.5325
+                            }
+                            $ChartArea.Position.Y = 45.5
+                            $ChartArea.Position.Width = 1.0625
+                            $ChartArea.Position.Height = 6.75
+                            if ($FlashModule.Status -eq "ok") {
+                                $ChartArea.BackColor = "#8dc63f"
+                            } else {
+                                $ChartArea.BackColor = "#fb5000"
+                            }
+                            $Chart.ChartAreas.Add($ChartArea)
+                        }
+                    }
+                } else {
+                    0..7 | ForEach-Object {
+                        $Bay = $_
+                        $FlashModule = ($ChartData | Where-Object {$_.Name -eq "CH0.BAY$($Current * 4 + $Bay)"})
+                        $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                        $ChartArea.Name = "Bay $($Current * 4 + $_)"
+                        if ($_ -lt 4) {
+                            $ChartArea.Position.X = $Chart.ChartAreas["Bay $(($Current - 1) * 4 + $_)"].Position.X + 7.5
+                        } else {
+                            $ChartArea.Position.X = $Chart.ChartAreas["Bay $($Current * 4 + $_ - 4)"].Position.X + 5.45125
+                        }
+                        $ChartArea.Position.Y = 45
+                        $ChartArea.Position.Width = 1.25
+                        $ChartArea.Position.Height = 50.5
+                        $ChartArea.BackColor = "#707070"
+                        $Chart.ChartAreas.Add($ChartArea)
+                        if ($FlashModule.Status -eq "not_installed") {
+                            $Chart.ChartAreas["Bay $($Current * 4 + $_)"].BackColor = "#363636"
+                        } else {
+                            $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                            if ($_ -lt 4) {
+                                $ChartArea.Position.X = $Chart.ChartAreas["Bay $(($Current - 1) * 4 + $_)"].Position.X + 7.58125
+                            } else {
+                                $ChartArea.Position.X = $Chart.ChartAreas["Bay $($Current * 4 + $_ - 4)"].Position.X + 5.5325
+                            }
+                            $ChartArea.Position.Y = 45.5
+                            $ChartArea.Position.Width = 1.0625
+                            $ChartArea.Position.Height = 6.75
+                            if ($FlashModule.Status -eq "ok") {
+                                $ChartArea.BackColor = "#8dc63f"
+                            } else {
+                                $ChartArea.BackColor = "#fb5000"
+                            }
+                            $Chart.ChartAreas.Add($ChartArea)
+                        }
+                    }
+                }
+            }
+            #endregion Front Panel
+
+            #region Rear Panel
+            $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+            $ChartArea.Position.X = 53.5
+            $ChartArea.Position.Y = 0
+            $ChartArea.Position.Width = 36.375
+            $ChartArea.Position.Height = 10
+            $ChartArea.Name = "Rear"
+            $Chart.ChartAreas.Add($ChartArea)
+
+            $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+            $ChartArea.Position.X = 53.5
+            $ChartArea.Position.Y = 10
+            $ChartArea.Position.Width = 36.375
+            $ChartArea.Position.Height = 90
+            $ChartArea.BackColor = "Black"
+            $Chart.ChartAreas.Add($ChartArea)
+
+            $ChartTitle = [System.Windows.Forms.DataVisualization.Charting.Title]::New()
+            $ChartTitle.Font = [System.Drawing.Font]::new('Proxima Nova', 12, [System.Drawing.FontStyle]::Regular, [System.Drawing.GraphicsUnit]::Pixel)
+            $ChartTitle.Text = 'Rear'
+            $ChartTitle.ForeColor = "#8d8d8d"
+            $ChartTitle.DockedToChartArea = "Rear"
+            $ChartTitle.Alignment = "MiddleLeft"
+            $Chart.Titles.Add($ChartTitle)
+
+            0..1 | ForEach-Object {
+                $Controller = $_
+                $PowerSupply = ($ChartData | Where-Object {$_.Name -eq "CH0.PWR" + $Controller})
+                $ControllerStatus = ($ChartData | Where-Object {$_.Name -eq "CT" + $Controller})
+
+                #region Power Supplies
+                $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                $ChartArea.Position.X = 54.4625
+                if ($_ -eq 0) {
+                    $ChartArea.Position.Y = 18.25
+                } else {
+                    $ChartArea.Position.Y = 61
+                }
+                $ChartArea.Position.Width = 4.75
+                $ChartArea.Position.Height = 30.5
+                $ChartArea.BackColor = "#707070"
+                $Chart.ChartAreas.Add($ChartArea)
+                
+                $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                $ChartArea.Position.X = 54.75
+                if ($_ -eq 0) {
+                    $ChartArea.Position.Y = 20.25
+                } else {
+                    $ChartArea.Position.Y = 63
+                }
+                $ChartArea.Position.Width = 1.0625
+                $ChartArea.Position.Height = 6.75
+                if ($PowerSupply.Status -eq "ok") {
+                    $ChartArea.BackColor = "#8dc63f"
+                } else {
+                    $ChartArea.BackColor = "#fb5000"
+                }
+                $Chart.ChartAreas.Add($ChartArea)
+                #endregion
+
+                #region Controllers
+                $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                $ChartArea.Position.X = 60.125
+                if ($_ -eq 0) {
+                    $ChartArea.Position.Y = 14.5
+                } else {
+                    $ChartArea.Position.Y = 57
+                }
+                $ChartArea.Position.Width = .875
+                $ChartArea.Position.Height = 38.5
+                if ($ControllerStatus.Status -eq "ok") {
+                    $ChartArea.BackColor = "#8dc63f"
+                } else {
+                    $ChartArea.BackColor = "#fb5000"
+                }
+                $Chart.ChartAreas.Add($ChartArea)
+                #endregion
+
+                #region Ethernet / SAS Ports
+                $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                $ChartArea.Position.X = 61.75
+                if ($_ -eq 0) {
+                    $ChartArea.Position.Y = 20.5
+                } else {
+                    $ChartArea.Position.Y = 63
+                }
+                $ChartArea.Position.Width = .75
+                $ChartArea.Position.Height = 11
+                $ChartArea.BackColor = "#2d95dd"
+                $Chart.ChartAreas.Add($ChartArea)
+
+                $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                $ChartArea.Position.X = 62.5
+                if ($_ -eq 0) {
+                    $ChartArea.Position.Y = 20.5
+                } else {
+                    $ChartArea.Position.Y = 63
+                }
+                $ChartArea.Position.Width = 6.3125
+                $ChartArea.Position.Height = 11
+                $ChartArea.BackColor = "#363636"
+                $Chart.ChartAreas.Add($ChartArea)
+
+                0..3 | ForEach-Object {
+                    $PipelineVariable = $_
+                    if ($ChartData.Name.Contains("CT$Controller.SAS$_")) {
+                        $Port = $ChartData | Where-Object {$_.Name -eq "CT$Controller.SAS$PipelineVariable"}
+                    } else {
+                        $Port = $ChartData | Where-Object {$_.Name -eq "CT$Controller.ETH$($PipelineVariable + 6)"}
+                    }
+                    $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                    $ChartArea.Position.X = (1.54 * $_) + 62.675
+                    if ($Controller -eq 0) {
+                        $ChartArea.Position.Y = 21.25
+                    } else {
+                        $ChartArea.Position.Y = 64.25
+                    }
+                    $ChartArea.Position.Width = 1.375
+                    $ChartArea.Position.Height = 9
+                    $ChartArea.BackColor = "#707070"
+                    $Chart.ChartAreas.Add($ChartArea)
+                
+                    $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                    $ChartArea.Position.X = (1.54 * $_) + 62.9425
+                    if ($Controller -eq 0) {
+                        $ChartArea.Position.Y = 23.25
+                    } else {
+                        $ChartArea.Position.Y = 65.75
+                    }
+                    $ChartArea.Position.Width = .875
+                    $ChartArea.Position.Height = 5.5
+                    if ($Port.Status -eq "ok") {
+                        if ($Port.Speed -eq 0) {
+                            $ChartArea.BackColor = "#b5b5b5"
+                        } else {
+                            $ChartArea.BackColor = "#8dc63f"
+                        }
+                    } else {
+                        $ChartArea.BackColor = "#f8941d"
+                    }
+                    $Chart.ChartAreas.Add($ChartArea)
+                }
+                #endregion
+
+                #region Ethernet Ports
+                $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                $ChartArea.Position.X = 61.75
+                if ($_ -eq 0) {
+                    $ChartArea.Position.Y = 35.5
+                } else {
+                    $ChartArea.Position.Y = 78.5
+                }
+                $ChartArea.Position.Width = .75
+                $ChartArea.Position.Height = 11
+                $ChartArea.BackColor = "#a67c52"
+                $Chart.ChartAreas.Add($ChartArea)
+
+                $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                $ChartArea.Position.X = 62.5
+                if ($_ -eq 0) {
+                    $ChartArea.Position.Y = 35.5
+                } else {
+                    $ChartArea.Position.Y = 78.5
+                }
+                $ChartArea.Position.Width = 3.25
+                $ChartArea.Position.Height = 11
+                $ChartArea.BackColor = "#363636"
+                $Chart.ChartAreas.Add($ChartArea)
+
+                0..1 | ForEach-Object {
+                    $PipelineVariable = $_
+                    $Port = $ChartData | Where-Object {$_.Name -eq "CT$Controller.ETH$($PipelineVariable)"}
+                    
+                    $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                    $ChartArea.Position.X = (1.54 * $_) + 62.675
+                    if ($Controller -eq 0) {
+                        $ChartArea.Position.Y = 36.75
+                    } else {
+                        $ChartArea.Position.Y = 79.675
+                    }
+                    $ChartArea.Position.Width = 1.375
+                    $ChartArea.Position.Height = 9
+                    $ChartArea.BackColor = "#707070"
+                    $Chart.ChartAreas.Add($ChartArea)
+                
+                    $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                    $ChartArea.Position.X = (1.54 * $_) + 62.9425
+                    if ($Controller -eq 0) {
+                        $ChartArea.Position.Y = 38.5
+                    } else {
+                        $ChartArea.Position.Y = 81.5
+                    }
+                    $ChartArea.Position.Width = .875
+                    $ChartArea.Position.Height = 5.5
+                    if ($Port.Status -eq "ok") {
+                        if ($Port.Speed -eq 0) {
+                            $ChartArea.BackColor = "#b5b5b5"
+                        } else {
+                            $ChartArea.BackColor = "#8dc63f"
+                        }
+                    } else {
+                        $ChartArea.BackColor = "#f8941d"
+                    }
+                    $Chart.ChartAreas.Add($ChartArea)
+                }
+                #endregion
+
+                #region Fibre Channel Slot 0 Ports
+                $Ports = $ChartData | Where-Object {$_.Name.StartsWith("CT$Controller.FC") -and $_.Slot -eq 0}
+
+                $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                $ChartArea.Position.X = 69.625
+                if ($_ -eq 0) {
+                    $ChartArea.Position.Y = 14.5
+                } else {
+                    $ChartArea.Position.Y = 57
+                }
+                $ChartArea.Position.Width = .75
+                $ChartArea.Position.Height = 11
+                if ($null -eq $Ports) {
+                    $ChartArea.BackColor = "#363636"
+                } else {
+                    $ChartArea.BackColor = "#f8941d"
+                }
+                $Chart.ChartAreas.Add($ChartArea)
+
+                $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                $ChartArea.Position.X = 70.375
+                if ($_ -eq 0) {
+                    $ChartArea.Position.Y = 14.5
+                } else {
+                    $ChartArea.Position.Y = 57
+                }
+                $ChartArea.Position.Width = 6.3125
+                $ChartArea.Position.Height = 11
+                $ChartArea.BackColor = "#363636"
+                $Chart.ChartAreas.Add($ChartArea)
+
+                if ($null -ne $Ports) {
+                    $Ports | ForEach-Object {
+                        $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                        $ChartArea.Position.X = (1.53 * $Ports.IndexOf($_)) + 70.55
+                        if ($Controller -eq 0) {
+                            $ChartArea.Position.Y = 15.25
+                        } else {
+                            $ChartArea.Position.Y = 58.25
+                        }
+                        $ChartArea.Position.Width = 1.375
+                        $ChartArea.Position.Height = 9
+                        $ChartArea.BackColor = "#707070"
+                        $Chart.ChartAreas.Add($ChartArea)
+                    
+                        $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                        $ChartArea.Position.X = (1.53 * $Ports.IndexOf($_)) + 70.8
+                        if ($Controller -eq 0) {
+                            $ChartArea.Position.Y = 17
+                        } else {
+                            $ChartArea.Position.Y = 60
+                        }
+                        $ChartArea.Position.Width = .875
+                        $ChartArea.Position.Height = 5.5
+                        if ($_.Status -eq "ok") {
+                            if ($_.Speed -eq 0) {
+                                $ChartArea.BackColor = "#b5b5b5"
+                            } else {
+                                $ChartArea.BackColor = "#8dc63f"
+                            }
+                        } else {
+                            $ChartArea.BackColor = "#f8941d"
+                        }
+                        $Chart.ChartAreas.Add($ChartArea)
+                    }
+                }
+                #endregion
+
+                #region Fibre Channel Slot 1 Ports
+                $Ports = $ChartData | Where-Object {$_.Name.StartsWith("CT$Controller.FC") -and $_.Slot -eq 1}
+
+                $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                $ChartArea.Position.X = 69.625
+                if ($_ -eq 0) {
+                    $ChartArea.Position.Y = 26.25
+                } else {
+                    $ChartArea.Position.Y = 69
+                }
+                $ChartArea.Position.Width = .75
+                $ChartArea.Position.Height = 11
+                if ($null -eq $Ports) {
+                    $ChartArea.BackColor = "#363636"
+                } else {
+                    $ChartArea.BackColor = "#f8941d"
+                }
+                $Chart.ChartAreas.Add($ChartArea)
+
+                $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                $ChartArea.Position.X = 70.375
+                if ($_ -eq 0) {
+                    $ChartArea.Position.Y = 26.25
+                } else {
+                    $ChartArea.Position.Y = 69
+                }
+                $ChartArea.Position.Width = 6.3125
+                $ChartArea.Position.Height = 11
+                $ChartArea.BackColor = "#363636"
+                $Chart.ChartAreas.Add($ChartArea)
+
+                if ($null -ne $Ports) {
+                    $Ports | ForEach-Object {
+                        $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                        $ChartArea.Position.X = (1.53 * $Ports.IndexOf($_)) + 70.55
+                        if ($Controller -eq 0) {
+                            $ChartArea.Position.Y = 27.5
+                        } else {
+                            $ChartArea.Position.Y = 70.25
+                        }
+                        $ChartArea.Position.Width = 1.375
+                        $ChartArea.Position.Height = 9
+                        $ChartArea.BackColor = "#707070"
+                        $Chart.ChartAreas.Add($ChartArea)
+                    
+                        $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                        $ChartArea.Position.X = (1.53 * $Ports.IndexOf($_)) + 70.8
+                        if ($Controller -eq 0) {
+                            $ChartArea.Position.Y = 29.25
+                        } else {
+                            $ChartArea.Position.Y = 72
+                        }
+                        $ChartArea.Position.Width = .875
+                        $ChartArea.Position.Height = 5.5
+                        if ($_.Status -eq "ok") {
+                            if ($_.Speed -eq 0) {
+                                $ChartArea.BackColor = "#b5b5b5"
+                            } else {
+                                $ChartArea.BackColor = "#8dc63f"
+                            }
+                        } else {
+                            $ChartArea.BackColor = "#f8941d"
+                        }
+                        $Chart.ChartAreas.Add($ChartArea)
+                    }
+                }
+                #endregion
+                
+                #region Fibre Channel Slot 2 Ports
+                $Ports = $ChartData | Where-Object {$_.Name.StartsWith("CT$Controller.FC") -and $_.Slot -eq 2}
+
+                $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                $ChartArea.Position.X = 82.0625
+                if ($_ -eq 0) {
+                    $ChartArea.Position.Y = 14.5
+                } else {
+                    $ChartArea.Position.Y = 57
+                }
+                $ChartArea.Position.Width = .75
+                $ChartArea.Position.Height = 11
+                if ($null -eq $Ports) {
+                    $ChartArea.BackColor = "#363636"
+                } else {
+                    $ChartArea.BackColor = "#f8941d"
+                }
+                $Chart.ChartAreas.Add($ChartArea)
+
+                $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                $ChartArea.Position.X = 82.8125
+                if ($_ -eq 0) {
+                    $ChartArea.Position.Y = 14.5
+                } else {
+                    $ChartArea.Position.Y = 57
+                }
+                $ChartArea.Position.Width = 6.3125
+                $ChartArea.Position.Height = 11
+                $ChartArea.BackColor = "#363636"
+                $Chart.ChartAreas.Add($ChartArea)
+
+                if ($null -ne $Ports) {
+                    $Ports | ForEach-Object {
+                        $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                        $ChartArea.Position.X = (1.53 * $Ports.IndexOf($_)) + 82.9875
+                        if ($Controller -eq 0) {
+                            $ChartArea.Position.Y = 15.25
+                        } else {
+                            $ChartArea.Position.Y = 58.25
+                        }
+                        $ChartArea.Position.Width = 1.375
+                        $ChartArea.Position.Height = 9
+                        $ChartArea.BackColor = "#707070"
+                        $Chart.ChartAreas.Add($ChartArea)
+                    
+                        $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                        $ChartArea.Position.X = (1.53 * $Ports.IndexOf($_)) + 83.2375
+                        if ($Controller -eq 0) {
+                            $ChartArea.Position.Y = 17
+                        } else {
+                            $ChartArea.Position.Y = 60
+                        }
+                        $ChartArea.Position.Width = .875
+                        $ChartArea.Position.Height = 5.5
+                        if ($_.Status -eq "ok") {
+                            if ($_.Speed -eq 0) {
+                                $ChartArea.BackColor = "#b5b5b5"
+                            } else {
+                                $ChartArea.BackColor = "#8dc63f"
+                            }
+                        } else {
+                            $ChartArea.BackColor = "#f8941d"
+                        }
+                        $Chart.ChartAreas.Add($ChartArea)
+                    }
+                }
+                #endregion
+
+                #region Fibre Channel Slot 3 Ports
+                $Ports = $ChartData | Where-Object {$_.Name.StartsWith("CT$Controller.FC") -and $_.Slot -eq 3}
+
+                $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                $ChartArea.Position.X = 82.0625
+                if ($_ -eq 0) {
+                    $ChartArea.Position.Y = 26.25
+                } else {
+                    $ChartArea.Position.Y = 69
+                }
+                $ChartArea.Position.Width = .75
+                $ChartArea.Position.Height = 11
+                if ($null -eq $Ports) {
+                    $ChartArea.BackColor = "#363636"
+                } else {
+                    $ChartArea.BackColor = "#f8941d"
+                }
+                $Chart.ChartAreas.Add($ChartArea)
+
+                $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                $ChartArea.Position.X = 82.8125
+                if ($_ -eq 0) {
+                    $ChartArea.Position.Y = 26.25
+                } else {
+                    $ChartArea.Position.Y = 69
+                }
+                $ChartArea.Position.Width = 6.3125
+                $ChartArea.Position.Height = 11
+                $ChartArea.BackColor = "#363636"
+                $Chart.ChartAreas.Add($ChartArea)
+
+                if ($null -ne $Ports) {
+                    $Ports | ForEach-Object {
+                        $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                        $ChartArea.Position.X = (1.53 * $Ports.IndexOf($_)) + 82.9875
+                        if ($Controller -eq 0) {
+                            $ChartArea.Position.Y = 27.5
+                        } else {
+                            $ChartArea.Position.Y = 70.25
+                        }
+                        $ChartArea.Position.Width = 1.375
+                        $ChartArea.Position.Height = 9
+                        $ChartArea.BackColor = "#707070"
+                        $Chart.ChartAreas.Add($ChartArea)
+                    
+                        $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                        $ChartArea.Position.X = (1.53 * $Ports.IndexOf($_)) + 83.2375
+                        if ($Controller -eq 0) {
+                            $ChartArea.Position.Y = 29.25
+                        } else {
+                            $ChartArea.Position.Y = 72
+                        }
+                        $ChartArea.Position.Width = .875
+                        $ChartArea.Position.Height = 5.5
+                        if ($_.Status -eq "ok") {
+                            if ($_.Speed -eq 0) {
+                                $ChartArea.BackColor = "#b5b5b5"
+                            } else {
+                                $ChartArea.BackColor = "#8dc63f"
+                            }
+                        } else {
+                            $ChartArea.BackColor = "#f8941d"
+                        }
+                        $Chart.ChartAreas.Add($ChartArea)
+                    }
+                }
+                #endregion
+                #region Ethernet Ports
+                0..1 | ForEach-Object {
+                    $Ports = $ChartData | Where-Object {$_.Name.StartsWith("CT$Controller.ETH") -and $_.Index -gt 1 -and $_.Index -le 5}
+                    $Row = $_
+
+                    if ($Row -eq 0 -or $Ports.Count -eq 4) {
+                        $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                        $ChartArea.Position.X = 77.5
+                        if ($Controller -eq 0) {
+                            $ChartArea.Position.Y = 35.5 - ($_ * 9.9375)
+                        } else {
+                            $ChartArea.Position.Y = 78.5 - ($_ * 10)
+                        }
+                        $ChartArea.Position.Width = .75
+                        $ChartArea.Position.Height = 11
+                        $ChartArea.BackColor = "#a67c52"
+                        $Chart.ChartAreas.Add($ChartArea)
+
+                        $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                        $ChartArea.Position.X = 78.25
+                        if ($Controller -eq 0) {
+                            $ChartArea.Position.Y = 35.5 - ($_ * 9.9375)
+                        } else {
+                            $ChartArea.Position.Y = 78.5 - ($_ * 10)
+                        }
+                        $ChartArea.Position.Width = 3.25
+                        $ChartArea.Position.Height = 11
+                        $ChartArea.BackColor = "#363636"
+                        $Chart.ChartAreas.Add($ChartArea)
+
+                        0..1 | ForEach-Object {
+                            $PipelineVariable = $_
+
+                            if ($Ports.Count -eq 2) {
+                                $Port = $Ports | Where-Object {$_.Index -eq $(($PipelineVariable * 1) + 2)}
+                            } else {
+                                $Port = $Ports | Where-Object {$_.Index -eq $(3 + ($PipelineVariable * 2) - $Row)}
+                            }
+                            $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                            $ChartArea.Position.X = (1.54 * $_) + 78.4375
+                            if ($Controller -eq 0) {
+                                $ChartArea.Position.Y = 36.75 - ($Row * 9.9375)
+                            } else {
+                                $ChartArea.Position.Y = 79.675 - ($Row * 10)
+                            }
+                            $ChartArea.Position.Width = 1.375
+                            $ChartArea.Position.Height = 9
+                            $ChartArea.BackColor = "#707070"
+                            $Chart.ChartAreas.Add($ChartArea)
+                        
+                            $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                            $ChartArea.Position.X = (1.54 * $_) + 78.705
+                            if ($Controller -eq 0) {
+                                $ChartArea.Position.Y = 38.5 - ($Row * 10)
+                            } else {
+                                $ChartArea.Position.Y = 81.5 - ($Row * 10)
+                            }
+                            $ChartArea.Position.Width = .875
+                            $ChartArea.Position.Height = 5.5
+                            if ($Port.Status -eq "ok") {
+                                if ($Port.Speed -eq 0) {
+                                    $ChartArea.BackColor = "#b5b5b5"
+                                } else {
+                                    $ChartArea.BackColor = "#8dc63f"
+                                }
+                            } else {
+                                $ChartArea.BackColor = "#f8941d"
+                            }
+                            $Chart.ChartAreas.Add($ChartArea)
+                        }
+                    }
+                }
+                #endregion
+            }
+            #endregion Rear Panel
         } else {
             $Chart = New-Object System.Windows.Forms.DataVisualization.Charting.Chart
             $Chart.Name = $Title

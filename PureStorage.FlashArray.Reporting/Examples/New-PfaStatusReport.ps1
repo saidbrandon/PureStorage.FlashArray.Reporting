@@ -12,7 +12,7 @@ function New-PfaStatusReport {
         [ValidateNotNullOrEmpty()]
         [PureStorageRestApi]$Connection,
 
-        [Parameter()][ValidateSet("All", "Capacity", "Latency", "IOPS", "Bandwidth", "Replication")]
+        [Parameter()][ValidateSet("All", "Capacity", "Overview", "Health", "Latency", "IOPS", "Bandwidth", "Replication")]
         [String[]]$IncludeCharts = "None",
         [Switch]$SkipVolumesReport,
         [String]$DataFolder = $env:APPDATA + "\PureStorage",
@@ -189,7 +189,8 @@ function New-PfaStatusReport {
                 $ArrayAttributes | Add-Member -MemberType NoteProperty -Name model -Value (Invoke-PfaApiRequest -Array $Connection -Request RestMethod -Method GET -Path "/controllers" -SkipCertificateCheck -ErrorAction Stop | Select-Object -Unique -Property model).model
             }
 
-            $PfaVolumes = Invoke-PfaApiRequest -Array $Connection -Request RestMethod -Method GET -Path "/volumes" -SkipCertificateCheck -ErrorAction Stop -PipelineVariable Volume | Where-Object {$_.Name -ne 'pure-protocol-endpoint'} | ForEach-Object {
+            $PfaVolumes = Invoke-PfaApiRequest -Array $Connection -Request RestMethod -Method GET -Path "/volumes" -SkipCertificateCheck -ErrorAction Stop | Where-Object {$_.Name -ne 'pure-protocol-endpoint'} | ForEach-Object {
+                $Volume = $_
                 $VolumeMetrics = Invoke-PfaApiRequest -Array $Connection -Request RestMethod -Method GET -Path "/volumes/space?names=$($_.Name)" -SkipCertificateCheck -ErrorAction Stop
                 $HostConnections = Invoke-PfaApiRequest -Array $Connection -Request RestMethod -Method GET -Path "/connections?volume_names=$($_.Name)" -SkipCertificateCheck -ErrorAction Stop
                 [PSCustomObject]@{
@@ -250,7 +251,11 @@ function New-PfaStatusReport {
                 }
             }
             if ($IncludeCharts -contains "All" -or $IncludeCharts -contains "Overview") {
-                $OverviewMetrics = Get-PfaChartData -Array $Connection -Type Dashboard -ChartName Overview            }
+                $OverviewMetrics = Get-PfaChartData -Array $Connection -Type Dashboard -ChartName Overview
+            }
+            if ($IncludeCharts -contains "All" -or $IncludeCharts -contains "Health") {
+                $HealthMetrics = Get-PfaChartData -Array $Connection -Type Dashboard -ChartName Health
+            }
             if ($IncludeCharts -contains "All" -or $IncludeCharts -contains "Capacity") {
                 $SpaceMetrics = Get-PfaChartData -Array $Connection -Type Dashboard -ChartName Capacity
             }
@@ -295,6 +300,11 @@ function New-PfaStatusReport {
                             } else {
                                 $null
                             }
+            Health      =   if ($null -ne $HealthMetrics -and ($IncludeCharts -contains "All" -or $IncludeCharts -contains "Health")) {
+                                New-PfaChart -Type Dashboard -ChartName Health -ChartData $HealthMetrics -AsBase64
+                            } else {
+                                $null
+                            }
             Capacity    =   if ($null -ne $SpaceMetrics -and ($IncludeCharts -contains "All" -or $IncludeCharts -contains "Capacity")) {
                                 New-PfaChart -Type Dashboard -ChartName Capacity -ChartData $SpaceMetrics -AsBase64
                             } else {
@@ -322,7 +332,7 @@ function New-PfaStatusReport {
                             }
         }
         if (-not $SaveCharts) {
-            $ExcludedProperties = @("Overview", "Capacity", "Latency", "IOPS", "Bandwidth", "Replication")
+            $ExcludedProperties = @("Overview", "Health", "Capacity", "Latency", "IOPS", "Bandwidth", "Replication")
         }
         $ResultsObj | Select-Object * -ExcludeProperty $ExcludedProperties | ConvertTo-Json -Depth 5 -Compress | Out-File "$DataFolder\$Array-$(($StartTime).ToString("yyyyMMdd")).json" -Encoding utf8 -ErrorAction SilentlyContinue
 
@@ -415,6 +425,9 @@ function New-PfaStatusReport {
             }
             if ($null -ne $ResultsObj.Capacity) {
                 $HTMLCharts += "<table><tr><th class=""single-col"">Capacity</th></tr><tr><td><img src=""data:image/png;charset=utf-8;base64,$($ResultsObj.Capacity)""></img></td></tr></table><br/>"
+            }
+            if ($null -ne $ResultsObj.Health) {
+                $HTMLCharts += "<table><tr><th class=""single-col"">Health</th></tr><tr><td><img src=""data:image/png;charset=utf-8;base64,$($ResultsObj.Health)""></img></td></tr></table><br/>"
             }
             if ($null -ne $ResultsObj.Latency) {
                 $HTMLCharts += "<table><tr><th class=""col-0"">Latency</th><th class=""instant-data""><span style=""color: #0d98e3;"">R</span> $("{0:N2}" -f ($ResultsObj.Metrics.IOLatency[$ResultsObj.Metrics.IOLatency.Count - 1].Usec_Per_Read_Op / 1000)) ms | <span style=""color: #f37430;"">W</span> $("{0:N2}" -f ($ResultsObj.Metrics.IOLatency[$ResultsObj.Metrics.IOLatency.Count - 1].Usec_Per_Write_Op / 1000)) ms | <span style=""color: #50ae54;"">Q</span> $("{0:N2}" -f ($ResultsObj.Metrics.IOLatency[$ResultsObj.Metrics.IOLatency.Count - 1].Queue_Usec_Per_Write_Op / 1000)) ms</th></tr><tr><td colspan=""2""><img src=""data:image/png;charset=utf-8;base64,$($ResultsObj.Latency)""></img></td></tr></table><br/>"

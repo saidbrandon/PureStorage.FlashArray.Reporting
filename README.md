@@ -55,6 +55,13 @@ New-PfaChart -Type Dashboard -ChartName Overview -ChartData $OverviewMetrics -As
 New-PfaChart -Type Dashboard -ChartName Overview -ChartData $OverviewMetrics -AsChart -Property "Hosts", "Host Groups", "Volumes", "Volume Snapshots", "Volume Groups", "Protection Groups", "Protection Group Snapshots", "Pods", "File Systems", "Directories", "Directory Snapshots", "Policies"| Show-PfaChart
 ```
 [![Dashboard-Overview](Images/Dashboard-Overview-All.png)](Images/Dashboard-Overview-All.png)
+### Dashboard - Health Chart
+```powershell
+$Hardware = Get-PfaChartData -Array $FlashArray -Type Dashboard -ChartName Health
+New-PfaChart -Type Dashboard -ChartName Health -ChartData $Hardware -AsChart | Show-PfaChart
+```
+[![Dashboard-Health](Images/Dashboard-Health-1.png)](Images/Dashboard-Health-1.png)
+[![Dashboard-Health](Images/Dashboard-Health-2.png)](Images/Dashboard-Health-2.png)
 ### Performance - Charts
 ```powershell
 $Performance = Get-PfaChartData -Array $FlashArray -Type Performance -Group Array
