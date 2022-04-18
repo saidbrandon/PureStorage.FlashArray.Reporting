@@ -544,7 +544,7 @@ function New-PfaStatusReport {
             if ($SendEmail) {
                 try {
                     $Message = New-Object Net.Mail.MailMessage $FromAddress, $RecipientAddress
-                    $ResultsObj.PSObject.Properties | Where-Object {$_.Name -eq "Overview" -or $_.Name -eq "Capacity" -or $_.Name -eq "Latency" -or $_.Name -eq "IOPS" -or $_.Name -eq "Bandwidth" -or $_.Name -eq "Replication"} | ForEach-Object {
+                    $ResultsObj.PSObject.Properties | Where-Object {$_.Name -eq "Overview" -or $_.Name -eq "Health" -or $_.Name -eq "Capacity" -or $_.Name -eq "Latency" -or $_.Name -eq "IOPS" -or $_.Name -eq "Bandwidth" -or $_.Name -eq "Replication"} | ForEach-Object {
                         if ($null -ne $_.Value) {
                             $HTML = $HTML.Replace("data:image/png;charset=utf-8;base64,$($_.Value)", "cid:$($_.Name).png")
                             $ImageBytes = [Convert]::FromBase64String($_.Value)
