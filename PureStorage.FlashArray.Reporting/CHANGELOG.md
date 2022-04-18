@@ -1,3 +1,9 @@
+## 1.0.5 - 2022-04-18
+
+### Updates and Fixes
+
+- Fix broken image link in Outlook for Health Chart
+
 ## 1.0.4 - 2022-04-13
 
 ### Updates and Fixes
