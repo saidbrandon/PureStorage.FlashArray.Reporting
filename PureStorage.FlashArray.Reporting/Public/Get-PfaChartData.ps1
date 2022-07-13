@@ -227,7 +227,20 @@ function Get-PfaChartData {
             }
             if ($ChartName -eq 'Health') {
                 try {
-                    Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method GET -Path "/hardware" -SkipCertificateCheck -ApiVersion 1
+                    $Drives = Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method GET -Path "/drive" -SkipCertificateCheck -ApiVersion 1 -ErrorAction SilentlyContinue
+                    Invoke-PfaApiRequest -Array $Array -Request RestMethod -Method GET -Path "/hardware" -SkipCertificateCheck -ApiVersion 1 | ForEach-Object {
+                        $PipelineVariable = $_
+                        if ($null -ne $Drives) {
+                            if ($_.Name.StartsWith("CH0.BAY")) {
+                                $Drive = $Drives | Where-Object {$_.name -eq $PipelineVariable.name}
+                                $_ | Add-Member -MemberType NoteProperty -Name status -Value $Drive.status -Force -PassThru
+                            } else {
+                                $_
+                            }
+                        } else {
+                            $_
+                        }
+                    }
                 } catch {
                     Write-Error $_.Exception.Message
                 }
