@@ -190,7 +190,7 @@ function New-PfaStatusReport {
                 if ($null -ne $Request) {
                     $ArrayAttributes | Add-Member -MemberType NoteProperty -Name model -Value (Invoke-PfaApiRequest -Array $Connection -Request RestMethod -Method GET -Path "/controllers" -SkipCertificateCheck -ErrorAction Stop | Select-Object -Unique -Property model).model
                     $ArrayAttributes | Add-Member -MemberType NoteProperty -Name parity -Value (Invoke-PfaApiRequest -Array $Connection -Request RestMethod -Method GET -Path "/arrays" -SkipCertificateCheck -ErrorAction Stop).parity
-                    $ArrayAttributes | Add-Member -MemberType NoteProperty -Name raw -Value (Invoke-PfaApiRequest -Array $FlashArrayC01 -Request RestMethod -Method GET -Path "/drives" -SkipCertificateCheck | Measure-Object -Sum capacity).sum
+                    $ArrayAttributes | Add-Member -MemberType NoteProperty -Name raw -Value (Invoke-PfaApiRequest -Array $Connection -Request RestMethod -Method GET -Path "/drives" -SkipCertificateCheck | Measure-Object -Sum capacity).sum
                 }
             }
 

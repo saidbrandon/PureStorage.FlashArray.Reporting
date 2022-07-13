@@ -1,3 +1,7 @@
+## [1.0.7] - 2022-07-13
+### Fixed
+- Connection variable in New-PfaStatusReport
+
 ## [1.0.6] - 2022-07-13
 ### Added
 - Raw capacity and parity information to status report
