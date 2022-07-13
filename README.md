@@ -62,6 +62,7 @@ New-PfaChart -Type Dashboard -ChartName Health -ChartData $Hardware -AsChart | S
 ```
 [![Dashboard-Health](Images/Dashboard-Health-1.png)](Images/Dashboard-Health-1.png)
 [![Dashboard-Health](Images/Dashboard-Health-2.png)](Images/Dashboard-Health-2.png)
+[![Dashboard-Health](Images/Dashboard-Health-3.png)](Images/Dashboard-Health-3.png)
 ### Performance - Charts
 ```powershell
 $Performance = Get-PfaChartData -Array $FlashArray -Type Performance -Group Array
@@ -71,11 +72,13 @@ Latency
 New-PfaChart -Type Performance -Group Array -ChartName Latency -ChartData $Performance -Property "Read","Write" -AsChart | Show-PfaChart
 ```
 [![Performance-Latency](Images/Performance-Latency.png)](Images/Performance-Latency.png)
+
 IOPS
 ```powershell
 New-PfaChart -Type Performance -Group Array -ChartName IOPS -ChartData $Performance -AsChart | Show-PfaChart
 ```
 [![Performance-IOPS](Images/Performance-IOPS.png)](Images/Performance-IOPS.png)
+
 Bandwidth
 ```powershell
 New-PfaChart -Type Performance -Group Array -ChartName Bandwidth -ChartData $Performance -AsChart | Show-PfaChart
@@ -97,9 +100,10 @@ Array Capacity
 New-PfaChart -Type Capacity -Group Array -ChartData $SpaceMetrics -ChartName 'Array Capacity' -AsChart | Show-PfaChart
 ```
 [![Array-ArrayCapacity](Images/Capacity-Array-ArrayCapacity.png)](Images/Capacity-Array-ArrayCapacity.png)
+
 Host Capacity
 ```powershell
-New-PfaChart -Type Capacity -Group Array -ChartData $SpaceMetrics -ChartName 'Array Capacity' -AsChart | Show-PfaChart
+New-PfaChart -Type Capacity -Group Array -ChartData $SpaceMetrics -ChartName 'Host Capacity' -AsChart | Show-PfaChart
 ```
 [![Array-HostCapacity](Images/Capacity-Array-HostCapacity.png)](Images/Capacity-Array-HostCapacity.png)
 
@@ -111,7 +115,7 @@ Array Capacity
 ```powershell
 New-PfaChart -Type Capacity -Group Volumes -ChartData $SpaceMetrics -ChartName 'Array Capacity' -AsChart | Show-PfaChart
 ```
-[![Volumes-ArrayCapacity](Images/Capacity-Volumes-ArrayCapacity.png)](Images/Capacity-Volumes-ArrayCapacity.png)
+[![Volumes-ArrayCapacity](Images/Capacity-Volumes-ArrayCapacity.png)](Images/Capacity-Volumes-ArrayCapacity.png)   
 Host Capacity
 ```powershell
 New-PfaChart -Type Capacity -Group Volumes -ChartData $SpaceMetrics -ChartName 'Host Capacity' -AsChart | Show-PfaChart
