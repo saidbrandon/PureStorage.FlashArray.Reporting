@@ -513,6 +513,23 @@ function New-PfaChart {
             $Fan = 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAARfAAAEXwHZ2GHSAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAlNJREFUOI1tk89vTFEUxz/nzjCbPvEX0CVBLETCkiKxpqSJsiiZIMLMe12wejubeW+qIZG0NpQo9pJq2GElwvixEcIfQDqbZl7f/Vq4rxnirO4995zv+Z7zPdf4x/I83yXpLDAGjAb3NzNbLstyfnp6ujccb9Vhdna2URRFF2gC7l/gYCVwu9/vt9M0HawDhOSnwAHAS3okacHMegCSdjrnJoFxwJnZ85WVlaNpmg7qAIPBYMbMDgA/gWNJkryoSnY6nQnn3KiZXZA0BzyRdDCKogy4ZKHntyH+UBzH68lZlu0DXoXr3TiOz3S73UPe+yXAm9luB0yFnhcbjca7LMseZFl2FcDMdlRgkj4BtFqtZUmPgRowVZd0OMQsrK6unjOzCWAiz/OvkrYBBTCZJMni+uTN7gEnJB2uA1sA6vV6ryzLTZKqineHqu/pdDpRrVb70Gq1Xjnnet57gK0OEEBRFNZutx8C+yWdkzQzVPGKmc15719mWXZybW2tkl8O+FFJBRDH8eskSeadc9Vgb5jZ6SE2W2u12s5w/e7M7BlA0LmS7pqk+8AGM/scmF0D7hdFMSdpMjB75sqynOfPho1nWTYWHrZXYGVZ9gKz63Ecn2o0GnuB40DpvZ+3oPdN4CLwyzk3LumNpKaZfWm3248qsDzPj0haBDYDs3EcX64D9Pv9dhRF24Ax7/2SpMfOuQUze9/tdkcl7ZI0Kek4YJKWoyhKYOgzpWm6Mazn+bAk/7MSuDUyMpI0m83iL4AhmjuAqbBgo8H9DViSdCdJko/D8b8BIN0oLhVubhgAAAAASUVORK5CYII='
             $Clear = 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAATSURBVDhPYxgFo2AUjAIwYGAAAAQQAAGnRHxjAAAAAElFTkSuQmCC'
 
+            if ($ChartName -eq "Health") {
+                if (-not (Test-Path Variable:DiskColors)) {
+                    New-Variable -Name DiskColors -Value @{
+                        'healthy'       = "#ff707070"
+                        'unhealthy'     = "#ffecc337"
+                        'unused'        = "#ff363636"
+                        'failed'        = "#ffed1c24"
+                        'recovering'    = "#ffb9d2a9"
+                        'degraded'      = "#ffecc337"
+                        'ok'            = '#ff707070'
+                        'identifying'   = '#ff707070'
+                        'not_installed' = '#ff363636'
+                        'device_off'    = '#ffed1c24'
+                    } -Option Constant -Scope Script
+                }
+            }
+
             $Chart = New-Object System.Windows.Forms.DataVisualization.Charting.Chart
             $Chart.Width = 1175
             $Chart.Height = 183
@@ -653,24 +670,33 @@ function New-PfaChart {
                         $ChartArea.Position.Y = 45
                         $ChartArea.Position.Width = 1.25
                         $ChartArea.Position.Height = 50.5
-                        $ChartArea.BackColor = "#707070"
                         $Chart.ChartAreas.Add($ChartArea)
-                    
-                        if ($FlashModule.Status -eq "not_installed") {
-                            $Chart.ChartAreas["Bay $_"].BackColor = "#363636"
-                        } else {
+                        $ChartArea.BackColor = $DiskColors[$FlashModule.Status]
+
+                        if ($FlashModule.Status -eq "healthy" -or $FlashModule.Status -eq "ok" -or $FlashModule.Status -eq "identifying") {
                             $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
                             $ChartArea.Position.X = $Chart.ChartAreas["Bay $Bay"].Position.X + (.01625 * 5)
                             $ChartArea.Position.Y = 45.5
                             $ChartArea.Position.Width = 1.0625
                             $ChartArea.Position.Height = 6.75
-                            if ($FlashModule.Status -eq "ok") {
-                                $ChartArea.BackColor = "#8dc63f"
+                            if ($FlashModule.Status -eq "identifying") {
+                                $ChartArea.BackColor = "#ecc337"
                             } else {
-                                $ChartArea.BackColor = "#fb5000"
+                                $ChartArea.BackColor = "#8dc63f"
                             }
+                            $Chart.ChartAreas.Add($ChartArea)                   
+                        }
+                        #region Disk Light
+                        if ($FlashModule.Identify -eq "on") {
+                            $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                            $ChartArea.Position.X = $Chart.ChartAreas["Bay $Bay"].Position.X + (.01625 * 5) + (21 * .008125)
+                            $ChartArea.Position.Y = 89.75
+                            $ChartArea.Position.Width = .75
+                            $ChartArea.Position.Height = 4.25
+                            $ChartArea.BackColor = "#ffff00"
                             $Chart.ChartAreas.Add($ChartArea)
                         }
+                        #endregion
                     }
                 } elseif ($_ -gt 0 -and $_ -lt 3) {
                     0..3 | ForEach-Object {
@@ -686,12 +712,10 @@ function New-PfaChart {
                         $ChartArea.Position.Y = 45
                         $ChartArea.Position.Width = 1.25
                         $ChartArea.Position.Height = 50.5
-                        $ChartArea.BackColor = "#707070"
+                        $ChartArea.BackColor = $DiskColors[$FlashModule.Status]
                         $Chart.ChartAreas.Add($ChartArea)
 
-                        if ($FlashModule.Status -eq "not_installed") {
-                            $Chart.ChartAreas["Bay $($Current * 4 + $_)"].BackColor = "#363636"
-                        } else {
+                        if ($FlashModule.Status -eq "healthy" -or $FlashModule.Status -eq "ok" -or $FlashModule.Status -eq "identifying") {
                             $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
                             if ($_ -lt 4) {
                                 $ChartArea.Position.X = $Chart.ChartAreas["Bay $(($Current - 1) * 4 + $_)"].Position.X + 7.58125
@@ -701,13 +725,29 @@ function New-PfaChart {
                             $ChartArea.Position.Y = 45.5
                             $ChartArea.Position.Width = 1.0625
                             $ChartArea.Position.Height = 6.75
-                            if ($FlashModule.Status -eq "ok") {
-                                $ChartArea.BackColor = "#8dc63f"
+                            if ($FlashModule.Status -eq "identifying") {
+                                $ChartArea.BackColor = "#ecc337"
                             } else {
-                                $ChartArea.BackColor = "#fb5000"
+                                $ChartArea.BackColor = "#8dc63f"
                             }
                             $Chart.ChartAreas.Add($ChartArea)
                         }
+                        #region Disk Light
+                        if ($FlashModule.Identify -eq "on") {
+                            $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                            if ($_ -lt 4) {
+                                $ChartArea.Position.X = $Chart.ChartAreas["Bay $(($Current - 1) * 4 + $_)"].Position.X + 7.58125 + (20 * .008125)
+                            } else {
+                                $ChartArea.Position.X = $Chart.ChartAreas["Bay $($Current * 4 + $_ - 4)"].Position.X + 5.5325 + (20 * .008125)
+                            }
+                            $ChartArea.Position.Y = 89.75
+                            $ChartArea.Position.Width = .75
+                            $ChartArea.Position.Height = 4.25
+                            $ChartArea.BackColor = "#ffff00"
+                            $Chart.ChartAreas.Add($ChartArea)
+                        }
+                        #endregion
+                        
                     }
                 } else {
                     0..7 | ForEach-Object {
@@ -723,11 +763,9 @@ function New-PfaChart {
                         $ChartArea.Position.Y = 45
                         $ChartArea.Position.Width = 1.25
                         $ChartArea.Position.Height = 50.5
-                        $ChartArea.BackColor = "#707070"
+                        $ChartArea.BackColor = $DiskColors[$FlashModule.Status]
                         $Chart.ChartAreas.Add($ChartArea)
-                        if ($FlashModule.Status -eq "not_installed") {
-                            $Chart.ChartAreas["Bay $($Current * 4 + $_)"].BackColor = "#363636"
-                        } else {
+                        if ($FlashModule.Status -eq "healthy" -or $FlashModule.Status -eq "ok" -or $FlashModule.Status -eq "identifying") {
                             $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
                             if ($_ -lt 4) {
                                 $ChartArea.Position.X = $Chart.ChartAreas["Bay $(($Current - 1) * 4 + $_)"].Position.X + 7.58125
@@ -737,13 +775,29 @@ function New-PfaChart {
                             $ChartArea.Position.Y = 45.5
                             $ChartArea.Position.Width = 1.0625
                             $ChartArea.Position.Height = 6.75
-                            if ($FlashModule.Status -eq "ok") {
-                                $ChartArea.BackColor = "#8dc63f"
+                            if ($FlashModule.Status -eq "identifying") {
+                                $ChartArea.BackColor = "#ecc337"
                             } else {
-                                $ChartArea.BackColor = "#fb5000"
+                                $ChartArea.BackColor = "#8dc63f"
                             }
                             $Chart.ChartAreas.Add($ChartArea)
                         }
+
+                        #region Disk Light
+                        if ($FlashModule.Identify -eq "on") {
+                            $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+                            if ($_ -lt 4) {
+                                $ChartArea.Position.X = $Chart.ChartAreas["Bay $(($Current - 1) * 4 + $_)"].Position.X + 7.58125 + (21 * .008125)
+                            } else {
+                                $ChartArea.Position.X = $Chart.ChartAreas["Bay $($Current * 4 + $_ - 4)"].Position.X + 5.5325 + (21 * .008125)
+                            }
+                            $ChartArea.Position.Y = 89.75
+                            $ChartArea.Position.Width = .75
+                            $ChartArea.Position.Height = 4.25
+                            $ChartArea.BackColor = "#ffff00"
+                            $Chart.ChartAreas.Add($ChartArea)
+                        }
+                        #endregion
                     }
                 }
             }
