@@ -186,7 +186,12 @@ function New-PfaStatusReport {
             if (-not (($Connection.ApiVersion[2].Minor | Select-Object -Last 1) -gt 1)) {
                 $ArrayAttributes | Add-Member -MemberType NoteProperty -Name model -Value (Invoke-PfaApiRequest -Array $Connection -Request RestMethod -Method GET -Path "/array?controllers=true" -ApiVersion 1.18 -SkipCertificateCheck -ErrorAction Stop | Select-Object -Unique -Property model).model
             } else {
-                $ArrayAttributes | Add-Member -MemberType NoteProperty -Name model -Value (Invoke-PfaApiRequest -Array $Connection -Request RestMethod -Method GET -Path "/controllers" -SkipCertificateCheck -ErrorAction Stop | Select-Object -Unique -Property model).model
+                $Request = Invoke-PfaApiRequest -Array $Connection -Request RestMethod -Method GET -Path "/controllers" -SkipCertificateCheck -ErrorAction Stop
+                if ($null -ne $Request) {
+                    $ArrayAttributes | Add-Member -MemberType NoteProperty -Name model -Value (Invoke-PfaApiRequest -Array $Connection -Request RestMethod -Method GET -Path "/controllers" -SkipCertificateCheck -ErrorAction Stop | Select-Object -Unique -Property model).model
+                    $ArrayAttributes | Add-Member -MemberType NoteProperty -Name parity -Value (Invoke-PfaApiRequest -Array $Connection -Request RestMethod -Method GET -Path "/arrays" -SkipCertificateCheck -ErrorAction Stop).parity
+                    $ArrayAttributes | Add-Member -MemberType NoteProperty -Name raw -Value (Invoke-PfaApiRequest -Array $FlashArrayC01 -Request RestMethod -Method GET -Path "/drives" -SkipCertificateCheck | Measure-Object -Sum capacity).sum
+                }
             }
 
             $PfaVolumes = Invoke-PfaApiRequest -Array $Connection -Request RestMethod -Method GET -Path "/volumes" -SkipCertificateCheck -ErrorAction Stop | Where-Object {$_.Name -ne 'pure-protocol-endpoint'} | ForEach-Object {
@@ -427,7 +432,7 @@ function New-PfaStatusReport {
                 $HTMLCharts += "<table><tr><th class=""single-col"">Capacity</th></tr><tr><td><img src=""data:image/png;charset=utf-8;base64,$($ResultsObj.Capacity)""></img></td></tr></table><br/>"
             }
             if ($null -ne $ResultsObj.Health) {
-                $HTMLCharts += "<table><tr><th class=""single-col"">Health</th></tr><tr><td><img src=""data:image/png;charset=utf-8;base64,$($ResultsObj.Health)""></img></td></tr></table><br/>"
+                $HTMLCharts += "<table><tr><th class=""col-0"">Health</th><th class=""instant-data""><span style=""color: #8d8d8d;"">Raw Capacity:</span> $("{0:N2}" -f (Format-Byte $ResultsObj.Attributes.raw)) | <span style=""color: #8d8d8d;"">Parity:</span> $("{0:N2} %" -f ($ResultsObj.Attributes.parity * 100))</th></tr><tr><td colspan=""2""><img src=""data:image/png;charset=utf-8;base64,$($ResultsObj.Health)""></img></td></tr></table><br/>"
             }
             if ($null -ne $ResultsObj.Latency) {
                 $HTMLCharts += "<table><tr><th class=""col-0"">Latency</th><th class=""instant-data""><span style=""color: #0d98e3;"">R</span> $("{0:N2}" -f ($ResultsObj.Metrics.IOLatency[$ResultsObj.Metrics.IOLatency.Count - 1].Usec_Per_Read_Op / 1000)) ms | <span style=""color: #f37430;"">W</span> $("{0:N2}" -f ($ResultsObj.Metrics.IOLatency[$ResultsObj.Metrics.IOLatency.Count - 1].Usec_Per_Write_Op / 1000)) ms | <span style=""color: #50ae54;"">Q</span> $("{0:N2}" -f ($ResultsObj.Metrics.IOLatency[$ResultsObj.Metrics.IOLatency.Count - 1].Queue_Usec_Per_Write_Op / 1000)) ms</th></tr><tr><td colspan=""2""><img src=""data:image/png;charset=utf-8;base64,$($ResultsObj.Latency)""></img></td></tr></table><br/>"
