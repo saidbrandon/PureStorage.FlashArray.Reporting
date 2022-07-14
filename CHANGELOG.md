@@ -1,4 +1,4 @@
-## [1.0.7] - 2022-07-13
+## [[1.0.7]](https://github.com/saidbrandon/PureStorage.FlashArray.Reporting/compare/1.0.6...1.0.7) - 2022-07-13
 ### Fixed
 - Connection variable in New-PfaStatusReport
 
