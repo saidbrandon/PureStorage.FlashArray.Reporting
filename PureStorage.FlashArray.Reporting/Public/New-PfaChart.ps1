@@ -522,10 +522,12 @@ function New-PfaChart {
                         'failed'        = "#ffed1c24"
                         'recovering'    = "#ffb9d2a9"
                         'degraded'      = "#ffecc337"
-                        'ok'            = '#ff707070'
-                        'identifying'   = '#ff707070'
-                        'not_installed' = '#ff363636'
-                        'device_off'    = '#ffed1c24'
+                        'ok'            = "#ff707070"
+                        'identifying'   = "#ff707070"
+                        'not_installed' = "#ff363636"
+                        'device_off'    = "#ffed1c24"
+                        'unrecognized'  = "#ffed1c24"
+                        'missing'       = "#ffed1c24"
                     } -Option Constant -Scope Script
                 }
             }
@@ -670,8 +672,12 @@ function New-PfaChart {
                         $ChartArea.Position.Y = 45
                         $ChartArea.Position.Width = 1.25
                         $ChartArea.Position.Height = 50.5
+                        if ($DiskColors.ContainsKey($FlashModule.Status)) {
+                            $ChartArea.BackColor = $DiskColors[$FlashModule.Status]
+                        } else {
+                            $ChartArea.BackColor = "#ffffffff"
+                        }
                         $Chart.ChartAreas.Add($ChartArea)
-                        $ChartArea.BackColor = $DiskColors[$FlashModule.Status]
 
                         if ($FlashModule.Status -eq "healthy" -or $FlashModule.Status -eq "ok" -or $FlashModule.Status -eq "identifying") {
                             $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
@@ -712,7 +718,11 @@ function New-PfaChart {
                         $ChartArea.Position.Y = 45
                         $ChartArea.Position.Width = 1.25
                         $ChartArea.Position.Height = 50.5
-                        $ChartArea.BackColor = $DiskColors[$FlashModule.Status]
+                        if ($DiskColors.ContainsKey($FlashModule.Status)) {
+                            $ChartArea.BackColor = $DiskColors[$FlashModule.Status]
+                        } else {
+                            $ChartArea.BackColor = "#ffffffff"
+                        }
                         $Chart.ChartAreas.Add($ChartArea)
 
                         if ($FlashModule.Status -eq "healthy" -or $FlashModule.Status -eq "ok" -or $FlashModule.Status -eq "identifying") {
@@ -763,7 +773,11 @@ function New-PfaChart {
                         $ChartArea.Position.Y = 45
                         $ChartArea.Position.Width = 1.25
                         $ChartArea.Position.Height = 50.5
-                        $ChartArea.BackColor = $DiskColors[$FlashModule.Status]
+                        if ($DiskColors.ContainsKey($FlashModule.Status)) {
+                            $ChartArea.BackColor = $DiskColors[$FlashModule.Status]
+                        } else {
+                            $ChartArea.BackColor = "#ffffffff"
+                        }
                         $Chart.ChartAreas.Add($ChartArea)
                         if ($FlashModule.Status -eq "healthy" -or $FlashModule.Status -eq "ok" -or $FlashModule.Status -eq "identifying") {
                             $ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
